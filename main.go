@@ -6,6 +6,7 @@ package main
 
 import (
 	"image"
+	"image/color"
 	_ "image/png"
 	"os"
 
@@ -20,6 +21,12 @@ func main() {
 	pixelgl.Run(run)
 }
 
+var (
+	Black = pixel.RGB(0, 0, 0)
+	White = pixel.RGB(1, 1, 1)
+	Red   = pixel.RGB(1, 0, 0)
+)
+
 func run() {
 	wcfg := pixelgl.WindowConfig{
 		Title:  "Tears of Butterflies: Colors of Blood",
@@ -27,11 +34,12 @@ func run() {
 		VSync:  true,
 	}
 
-	grid := Grid{}
-	grid.Cell.Width = 50
-	grid.Cell.Heigth = 25
-	grid.Spacing.Dx = 5
-	grid.Spacing.Dy = 5
+	grid := Grid{
+		CellWidth:  50,
+		CellHeight: 30,
+		Dx:         5,
+		Dy:         5,
+	}
 
 	humanoidSprite, err := loadSprite("assets/humanoid.png")
 	if err != nil {
@@ -47,47 +55,79 @@ func run() {
 
 	for !w.Closed() {
 		w.Update()
+		w.Clear(Black)
 		center := w.Bounds().Center()
-		w.Canvas().SetMatrix(pixel.IM.Scaled(center.Scaled(-1), 2))
-		grid.DrawCell(w, 0, 0, pixel.RGB(1, 1, 1))
-		grid.DrawCell(w, 0, 1, pixel.RGB(1, 1, 1))
-		grid.DrawCell(w, 1, 0, pixel.RGB(1, 1, 1))
-		grid.DrawCell(w, 1, 1, pixel.RGB(1, 1, 1))
-		humanoidSprite.Draw(w, grid.Matrix(1, 1))
-		humanoidSprite.Draw(w, grid.Matrix(0, 1))
-		humanoidSprite.Draw(w, grid.Matrix(1, 0))
-		humanoidSprite.Draw(w, grid.Matrix(0, 0))
+		w.Canvas().SetMatrix(pixel.IM.Scaled(pixel.ZV, 2).Moved(center))
+		grid.DrawCell(w, 0, 0, White)
+		grid.DrawCell(w, 0, 1, White)
+		grid.DrawCell(w, 1, 0, White)
+		grid.DrawCell(w, 1, 1, White)
+		humanoidSprite.Move(grid, 1, 1).Draw(w)
+		humanoidSprite.Move(grid, 0, 1).Draw(w)
+		humanoidSprite.Move(grid, 1, 0).Draw(w)
+		humanoidSprite.Move(grid, 0, 0).Draw(w)
 	}
 }
 
-func loadSprite(fname string) (*pixel.Sprite, error) {
+func loadSprite(fname string) (*Sprite, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
+
 	img, _, err := image.Decode(f)
 	if err != nil {
 		return nil, err
 	}
+
 	pic := pixel.PictureDataFromImage(img)
 	sprite := pixel.NewSprite(pic, pic.Bounds())
-	return sprite, nil
+	offset := pixel.V(0, pic.Bounds().H()/2)
+	offsetMatrix := pixel.IM.Moved(offset)
+	return &Sprite{sprite, offsetMatrix, pixel.IM}, nil
+}
+
+type Sprite struct {
+	*pixel.Sprite
+	offset, matrix pixel.Matrix
+}
+
+func (sprite Sprite) Draw(dst pixel.Target) {
+	sprite.DrawOutline(dst, Red)
+	sprite.Sprite.Draw(dst, sprite.offset.Chained(sprite.matrix))
+}
+
+func (sprite Sprite) Move(grid Grid, col, row int) Sprite {
+	sprite.matrix = sprite.matrix.Chained(grid.Matrix(col, row))
+	return sprite
+}
+
+func (sprite Sprite) DrawOutline(dst pixel.Target, color color.Color) {
+	frame := sprite.Sprite.Frame()
+	wHalf := frame.W() / 2
+	outlineOffset := pixel.V(-wHalf, 0)
+	outline := frame.Moved(outlineOffset)
+
+	imd := imdraw.New(nil)
+	imd.Color = color
+	imd.SetMatrix(sprite.matrix)
+
+	imd.Push(outline.Min, outline.Max)
+	imd.Rectangle(1)
+	imd.Draw(dst)
 }
 
 type Grid struct {
-	Cell struct {
-		Width, Heigth float64
-	}
-	Spacing struct {
-		Dx, Dy float64
-	}
+	CellWidth  float64
+	CellHeight float64
+	Dx, Dy     float64
 }
 
 func (grid Grid) Matrix(col, row int) pixel.Matrix {
 	x, y := float64(col), float64(row)
-	dx := grid.Cell.Width*x + grid.Spacing.Dx*x
-	dy := grid.Cell.Heigth*y + grid.Spacing.Dy*y
+	dx := grid.CellWidth*x + grid.Dx*x
+	dy := grid.CellHeight*y + grid.Dy*y
 	dr := pixel.V(dx, dy)
 	return pixel.IM.Moved(dr)
 }
@@ -96,9 +136,8 @@ func (grid Grid) DrawCell(dst pixel.Target, col, row int, color pixel.RGBA) {
 	imd := imdraw.New(nil)
 	imd.Color = color
 	imd.SetMatrix(grid.Matrix(col, row))
-	wHalf, hHalf := float64(grid.Cell.Width)/2, float64(grid.Cell.Heigth)/2
-	diagHalf := pixel.V(wHalf, hHalf)
-	imd.Push(diagHalf.Scaled(-1), diagHalf)
+	wHalf := float64(grid.CellWidth) / 2
+	imd.Push(pixel.V(-wHalf, 0), pixel.V(wHalf, grid.CellHeight))
 	imd.Rectangle(1)
 	imd.Draw(dst)
 }
