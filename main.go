@@ -11,6 +11,7 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,12 +36,20 @@ func run() {
 		log.Error().Err(err).Msg("")
 		return
 	}
-	w.SetSmooth(true)
+	grid := Grid{}
+	grid.Cell.Width = 50
+	grid.Cell.Heigth = 25
+	grid.Spacing.Dx = 5
+	grid.Spacing.Dy = 5
+
 	for !w.Closed() {
 		w.Update()
 		center := w.Bounds().Center()
-		w.Canvas().SetMatrix(pixel.IM.Scaled(center, 2))
-		humanoidSprite.Draw(w, pixel.IM.Moved(center))
+		w.Canvas().SetMatrix(pixel.IM.Scaled(center.Scaled(-1), 2))
+		humanoidSprite.Draw(w, grid.Matrix(1, 1))
+		humanoidSprite.Draw(w, grid.Matrix(0, 1))
+		humanoidSprite.Draw(w, grid.Matrix(1, 0))
+		humanoidSprite.Draw(w, grid.Matrix(0, 0))
 	}
 }
 
@@ -57,4 +66,21 @@ func loadSprite(fname string) (*pixel.Sprite, error) {
 	pic := pixel.PictureDataFromImage(img)
 	sprite := pixel.NewSprite(pic, pic.Bounds())
 	return sprite, nil
+}
+
+type Grid struct {
+	Cell struct {
+		Width, Heigth float64
+	}
+	Spacing struct {
+		Dx, Dy float64
+	}
+}
+
+func (grid Grid) Matrix(col, row int) pixel.Matrix {
+	x, y := float64(col), float64(row)
+	dx := grid.Cell.Width*x + grid.Spacing.Dx*x
+	dy := grid.Cell.Heigth*y + grid.Spacing.Dy*y
+	dr := pixel.V(dx, dy)
+	return pixel.IM.Moved(dr)
 }
