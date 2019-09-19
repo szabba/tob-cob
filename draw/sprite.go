@@ -38,7 +38,7 @@ func LoadSprite(fname string) (*Sprite, error) {
 }
 
 func (sprite Sprite) Draw(dst pixel.Target) {
-	sprite.DrawOutline(dst, Red)
+	sprite.DrawOutline(dst, pixel.RGB(1, 0, 0))
 	sprite.Sprite.Draw(dst, sprite.offset.Chained(sprite.matrix))
 }
 

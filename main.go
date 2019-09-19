@@ -9,9 +9,9 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/szabba/tob-cob/draw"
-
 	"github.com/rs/zerolog/log"
+
+	"github.com/szabba/tob-cob/draw" 
 )
 
 func main() {
@@ -55,10 +55,10 @@ func run() {
 		w.Clear(Black)
 		center := w.Bounds().Center()
 		w.Canvas().SetMatrix(pixel.IM.Scaled(pixel.ZV, 2).Moved(center))
-		grid.DrawCell(w, 0, 0, White)
-		grid.DrawCell(w, 0, 1, White)
-		grid.DrawCell(w, 1, 0, White)
-		grid.DrawCell(w, 1, 1, White)
+		grid.Cell(0, 0).Draw(w)
+		grid.Cell(0, 1).Draw(w)
+		grid.Cell(1, 0).Draw(w)
+		grid.Cell(1, 1).Draw(w)
 		humanoidSprite.Move(grid, 1, 1).Draw(w)
 		humanoidSprite.Move(grid, 0, 1).Draw(w)
 		humanoidSprite.Move(grid, 1, 0).Draw(w)

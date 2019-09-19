@@ -23,6 +23,10 @@ func (grid Grid) Matrix(col, row int) pixel.Matrix {
 	return pixel.IM.Moved(dr)
 }
 
+func (grid Grid) Cell(col, row int) Cell {
+	return Cell{col, row, grid}
+}
+
 func (grid Grid) DrawCell(dst pixel.Target, col, row int, color pixel.RGBA) {
 	imd := imdraw.New(nil)
 	imd.Color = color
