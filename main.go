@@ -5,6 +5,10 @@
 package main
 
 import (
+	"image"
+	_ "image/png"
+	"os"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/rs/zerolog/log"
@@ -20,14 +24,37 @@ func run() {
 		Bounds: pixel.R(0, 0, 800, 600),
 		VSync:  true,
 	}
-	w, err := pixelgl.NewWindow(wcfg)
+	humanoidSprite, err := loadSprite("assets/humanoid.png")
 	if err != nil {
-		log.Error().
-			Err(err).
-			Msg("cannot open window")
+		log.Error().Err(err).Msg("")
 		return
 	}
+
+	w, err := pixelgl.NewWindow(wcfg)
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return
+	}
+	w.SetSmooth(true)
 	for !w.Closed() {
 		w.Update()
+		center := w.Bounds().Center()
+		w.Canvas().SetMatrix(pixel.IM.Scaled(center, 2))
+		humanoidSprite.Draw(w, pixel.IM.Moved(center))
 	}
+}
+
+func loadSprite(fname string) (*pixel.Sprite, error) {
+	f, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return nil, err
+	}
+	pic := pixel.PictureDataFromImage(img)
+	sprite := pixel.NewSprite(pic, pic.Bounds())
+	return sprite, nil
 }
