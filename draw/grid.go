@@ -6,7 +6,6 @@ package draw
 
 import (
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
 )
 
 type Grid struct {
@@ -25,14 +24,4 @@ func (grid Grid) Matrix(col, row int) pixel.Matrix {
 
 func (grid Grid) Cell(col, row int) Cell {
 	return Cell{col, row, grid}
-}
-
-func (grid Grid) DrawCell(dst pixel.Target, col, row int, color pixel.RGBA) {
-	imd := imdraw.New(nil)
-	imd.Color = color
-	imd.SetMatrix(grid.Matrix(col, row))
-	wHalf := float64(grid.CellWidth) / 2
-	imd.Push(pixel.V(-wHalf, 0), pixel.V(wHalf, grid.CellHeight))
-	imd.Rectangle(1)
-	imd.Draw(dst)
 }
