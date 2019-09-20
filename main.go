@@ -11,7 +11,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/rs/zerolog/log"
 
-	"github.com/szabba/tob-cob/draw" 
+	"github.com/szabba/tob-cob/ui"
 )
 
 func main() {
@@ -31,14 +31,14 @@ func run() {
 		VSync:  true,
 	}
 
-	grid := draw.Grid{
+	grid := ui.Grid{
 		CellWidth:  50,
 		CellHeight: 30,
 		Dx:         5,
 		Dy:         5,
 	}
 
-	humanoidSprite, err := draw.LoadSprite("assets/humanoid.png")
+	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png")
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		return
