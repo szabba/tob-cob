@@ -49,9 +49,17 @@ func run() {
 		log.Error().Err(err).Msg("")
 		return
 	}
+	defer w.Destroy()
 
 	for !w.Closed() {
 		w.Update()
+		if w.JustReleased(pixelgl.KeyF) {
+			if w.Monitor() == nil {
+				w.SetMonitor(pixelgl.PrimaryMonitor())
+			} else {
+				w.SetMonitor(nil)
+			}
+		}
 		w.Clear(Black)
 		center := w.Bounds().Center()
 		w.Canvas().SetMatrix(pixel.IM.Scaled(pixel.ZV, 2).Moved(center))
