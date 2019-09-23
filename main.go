@@ -9,6 +9,7 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/szabba/tob-cob/ui"
@@ -25,6 +26,8 @@ var (
 )
 
 func run() {
+	log.Logger = log.Logger.Level(zerolog.InfoLevel)
+
 	wcfg := pixelgl.WindowConfig{
 		Title:  "Tears of Butterflies: Colors of Blood",
 		Bounds: pixel.R(0, 0, 800, 600),
@@ -37,6 +40,8 @@ func run() {
 		Dx:         5,
 		Dy:         5,
 	}
+
+	cam := ui.NewCamera(pixel.V(50, 0))
 
 	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png")
 	if err != nil {
@@ -61,8 +66,9 @@ func run() {
 			}
 		}
 		w.Clear(Black)
-		center := w.Bounds().Center()
-		w.Canvas().SetMatrix(pixel.IM.Scaled(pixel.ZV, 2).Moved(center))
+		camMatrix := cam.Matrix(w.Bounds())
+		w.Canvas().SetMatrix(camMatrix)
+
 		grid.Cell(0, 0).Draw(w)
 		grid.Cell(0, 1).Draw(w)
 		grid.Cell(1, 0).Draw(w)
