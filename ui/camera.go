@@ -9,18 +9,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// A Camera describes the coordinate tranformation between the world and the window.
+//
+// The zero value looks at the origin point (pixel.ZV) in world coordinates.
 type Camera struct {
 	lookAt pixel.Vec
 }
 
+// NewCamera creates a camera that will put lookAt in the center of the window.
 func NewCamera(lookAt pixel.Vec) Camera {
 	return Camera{lookAt}
 }
 
+// MoveBy changes the point being looked at by delta in window coordinates.
 func (cam *Camera) MoveBy(delta pixel.Vec) {
 	cam.lookAt = cam.lookAt.Add(delta)
 }
 
+// Matrix computes the world-to-window coordinate transformation matrix.
 func (cam *Camera) Matrix(bounds pixel.Rect) pixel.Matrix {
 	center := bounds.Center()
 	matrix := pixel.IM.Moved(center).Moved(cam.lookAt.Scaled(-1))
