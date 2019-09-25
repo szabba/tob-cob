@@ -42,6 +42,7 @@ func run() {
 	}
 
 	cam := ui.NewCamera(pixel.V(50, 0))
+	camCont := ui.NewCamController(&cam)
 
 	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png")
 	if err != nil {
@@ -65,6 +66,9 @@ func run() {
 				w.SetMonitor(nil)
 			}
 		}
+
+		camCont.Process(w)
+
 		w.Clear(Black)
 		camMatrix := cam.Matrix(w.Bounds())
 		w.Canvas().SetMatrix(camMatrix)

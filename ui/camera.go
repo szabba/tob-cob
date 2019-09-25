@@ -6,6 +6,7 @@ package ui
 
 import (
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,4 +39,42 @@ func (cam *Camera) Matrix(bounds pixel.Rect) pixel.Matrix {
 		Str("matrix", matrix.String()).
 		Msg("camera matrix calculated")
 	return matrix
+}
+
+type CameraController struct {
+	cam          *Camera
+	processInput inputProcessor
+}
+
+func NewCamController(cam *Camera) *CameraController {
+	return &CameraController{cam: cam}
+}
+
+type inputProcessor func(Input) inputProcessor
+
+func (cont *CameraController) Process(input Input) {
+	if cont.processInput == nil {
+		cont.processInput = cont.start(input)
+	} else {
+		cont.processInput = cont.processInput(input)
+	}
+}
+
+func (cont *CameraController) start(input Input) inputProcessor {
+	if input.Pressed(pixelgl.MouseButtonLeft) {
+		return cont.moving(input)
+	}
+	return nil
+}
+
+func (cont *CameraController) moving(input Input) inputProcessor {
+	from := input.MousePosition()
+	return func(input Input) inputProcessor {
+		if input.Pressed(pixelgl.MouseButtonLeft) {
+			delta := input.MousePosition().Sub(from).Scaled(-1)
+			cont.cam.MoveBy(delta)
+			return cont.moving(input)
+		}
+		return nil
+	}
 }
