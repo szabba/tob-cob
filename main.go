@@ -44,7 +44,7 @@ func run() {
 	cam := ui.NewCamera(pixel.V(50, 0))
 	camCont := ui.NewCamController(&cam)
 
-	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png")
+	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png", ui.AnchorSouth())
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		return

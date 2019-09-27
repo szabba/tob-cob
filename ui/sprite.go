@@ -13,12 +13,24 @@ import (
 	"github.com/faiface/pixel/imdraw"
 )
 
+type Anchor func(bounds pixel.Rect) (offset pixel.Vec)
+
+func (anc Anchor) For(bounds pixel.Rect) (offset pixel.Vec) {
+	return anc(bounds)
+}
+
+func AnchorSouth() Anchor { return anchorSouth }
+
+func anchorSouth(bounds pixel.Rect) pixel.Vec {
+	return pixel.V(0, bounds.H()/2)
+}
+
 type Sprite struct {
 	*pixel.Sprite
 	offset, matrix pixel.Matrix
 }
 
-func LoadSprite(fname string) (*Sprite, error) {
+func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -32,7 +44,7 @@ func LoadSprite(fname string) (*Sprite, error) {
 
 	pic := pixel.PictureDataFromImage(img)
 	sprite := pixel.NewSprite(pic, pic.Bounds())
-	offset := pixel.V(0, pic.Bounds().H()/2)
+	offset := anchor.For(pic.Bounds())
 	offsetMatrix := pixel.IM.Moved(offset)
 	return &Sprite{sprite, offsetMatrix, pixel.IM}, nil
 }
