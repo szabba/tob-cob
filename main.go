@@ -6,6 +6,7 @@ package main
 
 import (
 	_ "image/png"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -81,5 +82,7 @@ func run() {
 		humanoidSprite.Move(grid, 0, 1).Draw(w)
 		humanoidSprite.Move(grid, 1, 0).Draw(w)
 		humanoidSprite.Move(grid, 0, 0).Draw(w)
+
+		time.Sleep(time.Second / 60)
 	}
 }
