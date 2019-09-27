@@ -19,6 +19,12 @@ func (anc Anchor) For(bounds pixel.Rect) (offset pixel.Vec) {
 	return anc(bounds)
 }
 
+func AnchorNorthWest() Anchor { return anchorNorthWest }
+
+func anchorNorthWest(bounds pixel.Rect) pixel.Vec {
+	return pixel.V(bounds.W()/2, -bounds.H()/2)
+}
+
 func AnchorSouth() Anchor { return anchorSouth }
 
 func anchorSouth(bounds pixel.Rect) pixel.Vec {
@@ -27,7 +33,9 @@ func anchorSouth(bounds pixel.Rect) pixel.Vec {
 
 type Sprite struct {
 	*pixel.Sprite
-	offset, matrix pixel.Matrix
+	// offset is the vector by which the sprite has to be moved to ensure the correct anchor point.
+	offset    pixel.Vec
+	transform pixel.Matrix
 }
 
 func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
@@ -45,31 +53,53 @@ func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
 	pic := pixel.PictureDataFromImage(img)
 	sprite := pixel.NewSprite(pic, pic.Bounds())
 	offset := anchor.For(pic.Bounds())
-	offsetMatrix := pixel.IM.Moved(offset)
-	return &Sprite{sprite, offsetMatrix, pixel.IM}, nil
+	return &Sprite{sprite, offset, pixel.IM}, nil
 }
 
 func (sprite Sprite) Draw(dst pixel.Target) {
 	sprite.DrawOutline(dst, pixel.RGB(1, 0, 0))
-	sprite.Sprite.Draw(dst, sprite.offset.Chained(sprite.matrix))
+	sprite.Sprite.Draw(dst, sprite.matrix())
 }
 
-func (sprite Sprite) Move(grid Grid, col, row int) Sprite {
-	sprite.matrix = sprite.matrix.Chained(grid.Matrix(col, row))
+func (sprite Sprite) matrix() pixel.Matrix {
+	m := pixel.IM
+	m = m.Moved(sprite.offset)
+	m = m.Chained(sprite.transform)
+	return m
+}
+
+func (sprite Sprite) Transform(m pixel.Matrix) Sprite {
+	sprite.transform = sprite.transform.Chained(m)
 	return sprite
 }
 
 func (sprite Sprite) DrawOutline(dst pixel.Target, color color.Color) {
 	frame := sprite.Sprite.Frame()
-	wHalf := frame.W() / 2
-	outlineOffset := pixel.V(-wHalf, 0)
-	outline := frame.Moved(outlineOffset)
+	frame = frame.Moved(frame.Center().Scaled(-1))
+	frame = frame.Moved(sprite.offset)
+	frame.Min = sprite.transform.Project(frame.Min)
+	frame.Max = sprite.transform.Project(frame.Max)
+	outline := Outline{
+		Rect:  frame,
+		Color: color,
+		Width: 1,
+	}
 
+	outline.Draw(dst)
+}
+
+type Outline struct {
+	Color color.Color
+	Width float64
+	pixel.Rect
+}
+
+func (out Outline) Draw(dst pixel.Target) {
 	imd := imdraw.New(nil)
-	imd.Color = color
-	imd.SetMatrix(sprite.matrix)
+	imd.Color = out.Color
 
-	imd.Push(outline.Min, outline.Max)
+	imd.Push(out.Min, out.Max)
 	imd.Rectangle(1)
 	imd.Draw(dst)
+
 }

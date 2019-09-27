@@ -61,20 +61,21 @@ func (cont *CameraController) Process(input Input) {
 }
 
 func (cont *CameraController) start(input Input) inputProcessor {
-	if input.Pressed(pixelgl.MouseButtonLeft) {
-		return cont.moving(input)
+	if !input.Pressed(pixelgl.MouseButtonLeft) {
+		return nil
 	}
-	return nil
+	return cont.moving(input)
 }
 
 func (cont *CameraController) moving(input Input) inputProcessor {
 	from := input.MousePosition()
 	return func(input Input) inputProcessor {
-		if input.Pressed(pixelgl.MouseButtonLeft) {
-			delta := input.MousePosition().Sub(from).Scaled(-1)
-			cont.cam.MoveBy(delta)
-			return cont.moving(input)
+		if !input.Pressed(pixelgl.MouseButtonLeft) {
+			return nil
 		}
-		return nil
+
+		delta := input.MousePosition().Sub(from).Scaled(-1)
+		cont.cam.MoveBy(delta)
+		return cont.moving(input)
 	}
 }
