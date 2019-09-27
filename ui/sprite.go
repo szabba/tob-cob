@@ -57,7 +57,6 @@ func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
 }
 
 func (sprite Sprite) Draw(dst pixel.Target) {
-	sprite.Outline(pixel.RGB(1, 0, 0), 1).Draw(dst)
 	sprite.Sprite.Draw(dst, sprite.matrix())
 }
 
