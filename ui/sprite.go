@@ -57,7 +57,7 @@ func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
 }
 
 func (sprite Sprite) Draw(dst pixel.Target) {
-	sprite.DrawOutline(dst, pixel.RGB(1, 0, 0))
+	sprite.Outline(pixel.RGB(1, 0, 0), 1).Draw(dst)
 	sprite.Sprite.Draw(dst, sprite.matrix())
 }
 
@@ -73,7 +73,7 @@ func (sprite Sprite) Transform(m pixel.Matrix) Sprite {
 	return sprite
 }
 
-func (sprite Sprite) DrawOutline(dst pixel.Target, color color.Color) {
+func (sprite Sprite) Outline(color color.Color, width float64) Outline {
 	frame := sprite.Sprite.Frame()
 	frame = frame.Moved(frame.Center().Scaled(-1))
 	frame = frame.Moved(sprite.offset)
@@ -84,8 +84,7 @@ func (sprite Sprite) DrawOutline(dst pixel.Target, color color.Color) {
 		Color: color,
 		Width: 1,
 	}
-
-	outline.Draw(dst)
+	return outline
 }
 
 type Outline struct {
