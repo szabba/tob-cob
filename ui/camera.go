@@ -42,40 +42,31 @@ func (cam *Camera) Matrix(bounds pixel.Rect) pixel.Matrix {
 }
 
 type CameraController struct {
-	cam          *Camera
-	processInput inputProcessor
+	cam *Camera
 }
 
 func NewCamController(cam *Camera) *CameraController {
 	return &CameraController{cam: cam}
 }
 
-type inputProcessor func(Input) inputProcessor
-
 func (cont *CameraController) Process(input Input) {
-	if cont.processInput == nil {
-		cont.processInput = cont.start(input)
-	} else {
-		cont.processInput = cont.processInput(input)
-	}
+	delta := cont.lookAtDelta(input)
+	cont.cam.MoveBy(delta)
 }
 
-func (cont *CameraController) start(input Input) inputProcessor {
-	if !input.Pressed(pixelgl.MouseButtonLeft) {
-		return nil
+func (cont *CameraController) lookAtDelta(input Input) pixel.Vec {
+	delta := pixel.ZV
+	if input.Pressed(pixelgl.KeyLeft) {
+		delta.X -= 5
 	}
-	return cont.moving(input)
-}
-
-func (cont *CameraController) moving(input Input) inputProcessor {
-	from := input.MousePosition()
-	return func(input Input) inputProcessor {
-		if !input.Pressed(pixelgl.MouseButtonLeft) {
-			return nil
-		}
-
-		delta := input.MousePosition().Sub(from).Scaled(-1)
-		cont.cam.MoveBy(delta)
-		return cont.moving(input)
+	if input.Pressed(pixelgl.KeyRight) {
+		delta.X += 5
 	}
+	if input.Pressed(pixelgl.KeyUp) {
+		delta.Y += 5
+	}
+	if input.Pressed(pixelgl.KeyDown) {
+		delta.Y -= 5
+	}
+	return delta
 }
