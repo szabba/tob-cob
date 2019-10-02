@@ -65,3 +65,20 @@ var _noAction = &_NoAction{}
 func (*_NoAction) Run(timeLeft time.Duration) ActionStatus {
 	return Done(timeLeft)
 }
+
+// Wait returns an action that lasts waitTime but does nothing.
+func Wait(waitTime time.Duration) Action {
+	return &_Wait{waitTime}
+}
+
+type _Wait struct {
+	toEnd time.Duration
+}
+
+func (w *_Wait) Run(timeLeft time.Duration) ActionStatus {
+	if timeLeft < w.toEnd {
+		w.toEnd -= timeLeft
+		return Paused()
+	}
+	return Done(timeLeft - w.toEnd)
+}

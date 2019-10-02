@@ -97,29 +97,63 @@ func TestNoActionCompletesInNoTime(t *testing.T) {
 		t.Errorf, "the action left %s, wanted %s", status.TimeLeft(), timeLeft)
 }
 
-type TestAction struct {
-	OnError         func(msg string, args ...interface{})
-	RunTimes        int
-	TimeStillNeeded time.Duration
+func TestWaitWithExactTime(t *testing.T) {
+	// given
+	action := game.Wait(time.Second)
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	assert.That(status.Done(), t.Errorf, "the action should complete")
+	assert.That(!status.HasTimeLeft(), t.Errorf, "the action should use up all time")
+	assert.That(
+		status.TimeLeft() == time.Duration(0),
+		t.Errorf, "the time left is %s, want %s", status.TimeLeft(), time.Duration(0))
 }
 
-var _ game.Action = &TestAction{}
+func TestWaitWithoutEnoughTime(t *testing.T) {
+	// given
+	action := game.Wait(3 * time.Second)
 
-func (action *TestAction) Run(timeLeft time.Duration) game.ActionStatus {
-	action.RunTimes++
-	if timeLeft < 0 && action.OnError != nil {
-		action.OnError(
-			"action %p (in state %#v) called with timeLeft %s < 0",
-			action, action, timeLeft)
-	}
+	// when
+	status := action.Run(time.Second)
 
-	if timeLeft < action.TimeStillNeeded {
-		action.TimeStillNeeded -= timeLeft
-		timeLeft = 0
-		return game.Paused()
-	} else {
-		action.TimeStillNeeded = 0
-		timeLeft -= action.TimeStillNeeded
-		return game.Done(timeLeft)
-	}
+	// then
+	assert.That(!status.Done(), t.Errorf, "the action should not complete")
+	assert.That(!status.HasTimeLeft(), t.Errorf, "the action should use up all time")
+	assert.That(
+		status.TimeLeft() == time.Duration(0),
+		t.Errorf, "the time left is %s, want %s", status.TimeLeft(), time.Duration(0))
+}
+func TestWaitWithTimeToSpare(t *testing.T) {
+	// given
+	action := game.Wait(time.Second)
+
+	// when
+	status := action.Run(3 * time.Second)
+
+	// then
+	assert.That(status.Done(), t.Errorf, "the action should complete")
+	assert.That(status.HasTimeLeft(), t.Errorf, "the action should leave some time")
+	assert.That(
+		status.TimeLeft() == 2*time.Second,
+		t.Errorf, "the time left is %s, want %s", status.TimeLeft(), 2*time.Second)
+}
+
+func TestWaitWithSomeTimeAlreadyElapsed(t *testing.T) {
+	// given
+	action := game.Wait(3 * time.Second)
+	action.Run(time.Second)
+
+	// when
+	status := action.Run(2 * time.Second)
+
+	// then
+	assert.That(status.Done(), t.Errorf, "the action should complete")
+	assert.That(!status.HasTimeLeft(), t.Errorf, "the action should leave no time")
+	assert.That(
+		status.TimeLeft() == time.Duration(0),
+		t.Errorf, "the time left is %s, want %s", status.TimeLeft(), time.Duration(0))
+
 }
