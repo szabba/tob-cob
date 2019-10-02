@@ -82,3 +82,39 @@ func (w *_Wait) Run(timeLeft time.Duration) ActionStatus {
 	}
 	return Done(timeLeft - w.toEnd)
 }
+
+// Sequence creates an action that runs several steps one after another.
+func Sequence(steps ...Action) Action {
+	return &_Sequence{steps}
+}
+
+type _Sequence struct {
+	steps []Action
+}
+
+func (seq *_Sequence) Run(timeLeft time.Duration) ActionStatus {
+	lastStatus := Done(timeLeft)
+	for lastStatus.HasTimeLeft() && seq.hasStepsLeft() {
+		lastStatus = seq.runStep(lastStatus.TimeLeft())
+	}
+	if !seq.hasStepsLeft() {
+		return Done(lastStatus.TimeLeft())
+	}
+	return Paused()
+}
+
+func (seq *_Sequence) hasStepsLeft() bool {
+	return len(seq.steps) > 0
+}
+
+func (seq *_Sequence) runStep(timeLeft time.Duration) ActionStatus {
+	if len(seq.steps) == 0 {
+		return Done(timeLeft)
+	}
+
+	status := seq.steps[0].Run(timeLeft)
+	if status.Done() {
+		seq.steps = seq.steps[1:]
+	}
+	return status
+}
