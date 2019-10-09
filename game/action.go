@@ -78,6 +78,17 @@ func (*_NoAction) Run(timeLeft time.Duration) ActionStatus {
 	return Done(timeLeft)
 }
 
+// Interrupt returns an action that immediately interrupts.
+func Interrupt() Action { return _interrupt }
+
+type _Interrupt struct{}
+
+var _interrupt = &_Interrupt{}
+
+func (*_Interrupt) Run(timeLeft time.Duration) ActionStatus {
+	return Interrupted(timeLeft)
+}
+
 // Wait returns an action that lasts waitTime but does nothing.
 func Wait(waitTime time.Duration) Action {
 	return &_Wait{waitTime}
