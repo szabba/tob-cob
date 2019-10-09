@@ -12,6 +12,66 @@ import (
 	"github.com/szabba/tob-cob/game"
 )
 
+func TestInterrupted(t *testing.T) {
+	// given
+	timeLeft := time.Second
+
+	// when
+	status := game.Interrupted(timeLeft)
+
+	// then
+	assert.That(!status.Done(), t.Errorf, "the status should say the action has not completed")
+	assert.That(
+		status.Interrupted(),
+		t.Errorf, "the status should say the action was interrupted")
+	assert.That(
+		status.HasTimeLeft(),
+		t.Errorf, "the status should say there is time left after running the action")
+	assert.That(
+		status.TimeLeft() == timeLeft,
+		t.Errorf, "time left is %s, want %s", status.TimeLeft(), timeLeft)
+}
+
+func TestInterruptedWithNoTimeLeft(t *testing.T) {
+	// given
+	timeLeft := time.Duration(0)
+
+	// when
+	status := game.Interrupted(timeLeft)
+
+	// then
+	assert.That(!status.Done(), t.Errorf, "the status should say the action has not completed")
+	assert.That(
+		status.Interrupted(),
+		t.Errorf, "the status should say the action was interrupted")
+	assert.That(
+		!status.HasTimeLeft(),
+		t.Errorf, "the status should say there is no time left after running the action")
+	assert.That(
+		status.TimeLeft() == timeLeft,
+		t.Errorf, "time left is %s, want %s", status.TimeLeft(), timeLeft)
+}
+
+func TestInterruptedWithNegativeTimeLeft(t *testing.T) {
+	// given
+	timeLeft := -time.Second
+	sanitizedTime := time.Duration(0)
+
+	// when
+	status := game.Interrupted(timeLeft)
+
+	// then
+	assert.That(!status.Done(), t.Errorf, "the status should say the action has not completed")
+	assert.That(
+		status.Interrupted(),
+		t.Errorf, "the status should say the action was interrupted")
+	assert.That(
+		!status.HasTimeLeft(),
+		t.Errorf, "the status should say there is no time left after running the action")
+	assert.That(
+		status.TimeLeft() == sanitizedTime,
+		t.Errorf, "time left is %s, want %s", status.TimeLeft(), sanitizedTime)
+}
 func TestDone(t *testing.T) {
 	// given
 	timeLeft := time.Second

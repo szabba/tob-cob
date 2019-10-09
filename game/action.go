@@ -19,12 +19,13 @@ type Action interface {
 // An ActionStatus says whether an action completed.
 // It also says how much time is left after running it.
 type ActionStatus struct {
-	timeLeft time.Duration
-	done     bool
+	timeLeft    time.Duration
+	done        bool
+	interrupted bool
 }
 
 // Interrupted says whether the action was interrupted.
-func (status ActionStatus) Interrupted() bool { return false }
+func (status ActionStatus) Interrupted() bool { return status.interrupted }
 
 // HasTimeLeft says whether there is time left after running an action.
 func (status ActionStatus) HasTimeLeft() bool { return status.TimeLeft() > 0 }
@@ -34,6 +35,17 @@ func (status ActionStatus) TimeLeft() time.Duration { return status.timeLeft }
 
 // Done says whether the action has completed.
 func (status ActionStatus) Done() bool { return status.done }
+
+// Interrupted creates an action status saying that the action was interrupted.
+//
+// The timeLeft should be the time the action did not use up.
+// As a special case, there will be no time left when the argument is negative.
+func Interrupted(timeLeft time.Duration) ActionStatus {
+	if timeLeft < 0 {
+		timeLeft = 0
+	}
+	return ActionStatus{timeLeft: timeLeft, interrupted: true}
+}
 
 // Done creates an action status indicating that an action has completed.
 //
@@ -46,12 +58,9 @@ func Done(timeLeft time.Duration) ActionStatus {
 	return ActionStatus{timeLeft: timeLeft, done: true}
 }
 
-// Paused creates an action status indicating that an action ran out of time.
-//
-// This means that the action has not completed.
-// Also, there is no time left to run other actions.
+// Paused creates an action status indicating that an action needs more time to complete.
 func Paused() ActionStatus {
-	return ActionStatus{timeLeft: 0, done: false}
+	return ActionStatus{}
 }
 
 // NoAction returns an action that completes instantly.
