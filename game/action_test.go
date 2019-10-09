@@ -307,6 +307,15 @@ func TestSequence(t *testing.T) {
 			Times:  []time.Duration{6 * time.Second},
 			Status: game.Done(time.Second),
 		},
+
+		"interruptFirst": {
+			Steps: []game.Action{
+				game.Interrupt(),
+				game.Wait(time.Second),
+			},
+			Times:  []time.Duration{2 * time.Second},
+			Status: game.Interrupted(2 * time.Second),
+		},
 	}
 
 	for name, kase := range kases {

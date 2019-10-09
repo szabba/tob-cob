@@ -121,7 +121,7 @@ func (seq *_Sequence) Run(timeLeft time.Duration) ActionStatus {
 		lastStatus = seq.runStep(lastStatus.TimeLeft())
 	}
 	if !seq.hasStepsLeft() {
-		return Done(lastStatus.TimeLeft())
+		return lastStatus
 	}
 	return Paused()
 }
@@ -136,7 +136,9 @@ func (seq *_Sequence) runStep(timeLeft time.Duration) ActionStatus {
 	}
 
 	status := seq.steps[0].Run(timeLeft)
-	if status.Done() {
+	if status.Interrupted() {
+		seq.steps = nil
+	} else if status.Done() {
 		seq.steps = seq.steps[1:]
 	}
 	return status
