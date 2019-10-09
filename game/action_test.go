@@ -22,6 +22,9 @@ func TestDone(t *testing.T) {
 	// then
 	assert.That(status.Done(), t.Errorf, "the status should say the action has completed")
 	assert.That(
+		!status.Interrupted(),
+		t.Errorf, "the status should say the action was not interrupted")
+	assert.That(
 		status.HasTimeLeft(),
 		t.Errorf, "the status should say there is time left after running the action")
 	assert.That(
@@ -39,6 +42,9 @@ func TestDoneWithNoTimeLeft(t *testing.T) {
 	// then
 	assert.That(status.Done(), t.Errorf, "the status should say the action has completed")
 	assert.That(
+		!status.Interrupted(),
+		t.Errorf, "the status should say the action was not interrupted")
+	assert.That(
 		!status.HasTimeLeft(),
 		t.Errorf, "the status should say there is no time left after running the action")
 	assert.That(
@@ -46,7 +52,7 @@ func TestDoneWithNoTimeLeft(t *testing.T) {
 		t.Errorf, "time left is %s, want %s", status.TimeLeft(), timeLeft)
 }
 
-func TestDoneWithNegaiveTimeLeft(t *testing.T) {
+func TestDoneWithNegativeTimeLeft(t *testing.T) {
 	// given
 	timeLeft := -time.Second
 	sanitizedTime := time.Duration(0)
@@ -56,6 +62,9 @@ func TestDoneWithNegaiveTimeLeft(t *testing.T) {
 
 	// then
 	assert.That(status.Done(), t.Errorf, "the status should say the action has completed")
+	assert.That(
+		!status.Interrupted(),
+		t.Errorf, "the status should say the action was not interrupted")
 	assert.That(
 		!status.HasTimeLeft(),
 		t.Errorf, "the status should say there is no time left after running the action")
@@ -74,6 +83,9 @@ func TestPause(t *testing.T) {
 	// then
 	// then
 	assert.That(!status.Done(), t.Errorf, "the status should say the action has not completed")
+	assert.That(
+		!status.Interrupted(),
+		t.Errorf, "the status should say the action was not interrupted")
 	assert.That(
 		!status.HasTimeLeft(),
 		t.Errorf, "the status should say there is no time left after running the action")

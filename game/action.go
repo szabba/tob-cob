@@ -23,6 +23,9 @@ type ActionStatus struct {
 	done     bool
 }
 
+// Interrupted says whether the action was interrupted.
+func (status ActionStatus) Interrupted() bool { return false }
+
 // HasTimeLeft says whether there is time left after running an action.
 func (status ActionStatus) HasTimeLeft() bool { return status.TimeLeft() > 0 }
 
