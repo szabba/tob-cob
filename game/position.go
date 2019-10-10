@@ -4,12 +4,12 @@
 
 package game
 
-// A Position is a point on a 2D grid.
-type Position struct {
+// A Point is a point on a 2D grid.
+type Point struct {
 	Row, Column int
 }
 
 // P creates a position at the said row and column.
-func P(row, column int) Position {
-	return Position{Row: row, Column: column}
+func P(row, column int) Point {
+	return Point{Row: row, Column: column}
 }
