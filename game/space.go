@@ -9,13 +9,13 @@ package game
 // It is a subspace of a 2D grid.
 // Which positions on the grid exist can change dynamically.
 type Space struct {
-	poses map[Point]bool
+	poses map[Point]SpaceTaker
 }
 
 // NewSpace creates a new, empty space.
 func NewSpace() *Space {
 	return &Space{
-		poses: map[Point]bool{},
+		poses: map[Point]SpaceTaker{},
 	}
 }
 
@@ -45,7 +45,7 @@ func (pos Position) Create() bool {
 	if pos.Exists() {
 		return false
 	}
-	pos.space.poses[pos.at] = pos.Taken()
+	pos.space.poses[pos.at] = nil
 	return true
 }
 
@@ -62,16 +62,17 @@ func (pos Position) Destroy() bool {
 
 // Taken says whether the position is currently taken.
 func (pos Position) Taken() bool {
-	return pos.space.poses[pos.at]
+	return pos.space.poses[pos.at] != nil
 }
 
 // Take tries to mark the position as taken.
 // It fails if the position does not exist or is free.
-func (pos Position) Take() bool {
+func (pos Position) Take(taker SpaceTaker) bool {
 	if !pos.Exists() || pos.Taken() {
 		return false
 	}
-	pos.space.poses[pos.at] = true
+	taker.LetOnto(pos)
+	pos.space.poses[pos.at] = taker
 	return true
 }
 
@@ -81,6 +82,30 @@ func (pos Position) Free() bool {
 	if !pos.Taken() {
 		return false
 	}
-	pos.space.poses[pos.at] = false
+	pos.space.poses[pos.at].ForceOff(pos)
+	pos.space.poses[pos.at] = nil
 	return true
 }
+
+// A SpaceTaker is the thing that takes up a taken position.
+//
+// A space taker can take up multiple positions at once.
+type SpaceTaker interface {
+	// LetOnto tells the space taker that it is now taking up pos.
+	LetOnto(pos Position)
+	// ForceOff tells the space taker that it is no longer taking up pos.
+	ForceOff(pos Position)
+}
+
+// DummyTaker returns a space taker that only takes up the position it takes.
+// It has no additional behaviour.
+func DummyTaker() SpaceTaker {
+	return _dummyTaker
+}
+
+type _DummyTaker struct{}
+
+var _dummyTaker = &_DummyTaker{}
+
+func (*_DummyTaker) LetOnto(_ Position)  {}
+func (*_DummyTaker) ForceOff(_ Position) {}
