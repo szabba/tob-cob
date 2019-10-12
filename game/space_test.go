@@ -11,6 +11,19 @@ import (
 	"github.com/szabba/tob-cob/game"
 )
 
+func TestPositionIsAtItsPoint(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	// when
+	pos := space.At(game.P(13, 25))
+
+	// then
+	assert.That(
+		pos.AtPoint() == game.P(13, 25),
+		t.Errorf, "position at %#v, want %#v", pos.AtPoint(), game.P(13, 25))
+}
+
 func TestPositionDoesNotExistByDefault(t *testing.T) {
 	// given
 	space := game.NewSpace()

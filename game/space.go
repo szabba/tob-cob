@@ -30,6 +30,9 @@ type Position struct {
 	at    Point
 }
 
+// AtPoint is the point at which the position is in the space that contains it.
+func (pos Position) AtPoint() Point { return pos.at }
+
 // Exists says whether the position within the space exists.
 func (pos Position) Exists() bool {
 	_, exists := pos.space.poses[pos.at]
