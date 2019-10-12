@@ -131,10 +131,6 @@ func (seq *_Sequence) hasStepsLeft() bool {
 }
 
 func (seq *_Sequence) runStep(timeLeft time.Duration) ActionStatus {
-	if len(seq.steps) == 0 {
-		return Done(timeLeft)
-	}
-
 	status := seq.steps[0].Run(timeLeft)
 	if status.Interrupted() {
 		seq.steps = nil
