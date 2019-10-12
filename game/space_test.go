@@ -8,9 +8,38 @@ import (
 	"testing"
 
 	"github.com/szabba/assert"
+
 	"github.com/szabba/tob-cob/game"
 )
 
+func TestPositionsFromTheSameSpaceAtTheSamePointAreEqual(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	first := space.At(game.P(13, 25))
+
+	// when
+	second := space.At(game.P(13, 25))
+
+	// then
+	assert.That(
+		first == second,
+		t.Errorf, "%#v and %#v are not the same", first, second)
+}
+
+func TestPositionsFromTheTwoSpacesAtTheSamePointAreNotEqual(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	otherSpace := game.NewSpace()
+	first := space.At(game.P(13, 25))
+
+	// when
+	second := otherSpace.At(game.P(13, 25))
+
+	// then
+	assert.That(
+		first != second,
+		t.Errorf, "different spaces return the same position %#v", first)
+}
 func TestPositionIsAtItsPoint(t *testing.T) {
 	// given
 	space := game.NewSpace()

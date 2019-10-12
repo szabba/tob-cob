@@ -20,6 +20,8 @@ func NewSpace() *Space {
 }
 
 // At returns the position at the given point in the space.
+//
+// Two position values returned for the same point in the space will be equal.
 func (space *Space) At(at Point) Position {
 	return Position{space, at}
 }
