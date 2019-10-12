@@ -11,7 +11,7 @@ import (
 	"github.com/szabba/tob-cob/game"
 )
 
-func TestSpaceHasNonexistentPositionsByDefault(t *testing.T) {
+func TestPositionDoesNotExistByDefault(t *testing.T) {
 	// given
 	space := game.NewSpace()
 
@@ -20,6 +20,18 @@ func TestSpaceHasNonexistentPositionsByDefault(t *testing.T) {
 
 	// then
 	assert.That(!pos.Exists(), t.Errorf, "the position should not exist")
+}
+
+func TestPositionThatDoesNotExist(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+
+	// when
+	ok := pos.Create()
+
+	// then
+	assert.That(ok, t.Errorf, "creating the position should succeed")
 }
 
 func TestPoisitionExistsOnceItHasBeenCreated(t *testing.T) {
@@ -47,8 +59,20 @@ func TestOnlyThePositionCreatedExists(t *testing.T) {
 	assert.That(!otherPos.Exists(), t.Errorf, "the other position should not exist")
 }
 
-func TestDestroyedPositionShouldNotExist(t *testing.T) {
+func TestACreatedPositionCanBeDestroyed(t *testing.T) {
 	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+
+	// when
+	ok := pos.Destroy()
+
+	// then
+	assert.That(ok, t.Errorf, "destroying the position should succeed")
+}
+
+func TestDestroyedPositionShouldNotExist(t *testing.T) {
 	// given
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
@@ -75,53 +99,198 @@ func TestDestroyedPositionCanBeRecreated(t *testing.T) {
 	assert.That(pos.Exists(), t.Errorf, "the position should exist")
 }
 
-func TestItIsSafeToCreateAPositionTwice(t *testing.T) {
+func TestAPositionCannotBeCreatedTwiceInARow(t *testing.T) {
 	// given
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
 	pos.Create()
 
 	// when
-	p := catchPanic(func() {
-		pos.Create()
-	})
+	ok := pos.Create()
 
 	// then
-	assert.That(p == nil, t.Errorf, "a second call should not panic")
+	assert.That(!ok, t.Errorf, "creating a position twice should fail")
 }
 
-func TestItIsSafeToDestroyAPositionTwice(t *testing.T) {
+func TestAPositionCannotBeDestroyedTwiceInARow(t *testing.T) {
 	// given
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
-	pos.Create()
 	pos.Destroy()
 
 	// when
-	p := catchPanic(func() {
-		pos.Destroy()
-	})
+	ok := pos.Destroy()
 
 	// then
-	assert.That(p == nil, t.Errorf, "a second call should not panic")
+	assert.That(!ok, t.Errorf, "destroying the position should fail")
 }
 
-func TestItIsSafeToCallDestroyBeforeCreate(t *testing.T) {
+func TestAPositionThatWasNotCreatedCannotBeDestroyed(t *testing.T) {
 	// given
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
 
 	// when
-	p := catchPanic(func() {
-		pos.Destroy()
-	})
+	ok := pos.Destroy()
 
 	// then
-	assert.That(p == nil, t.Errorf, "the call should not panic")
+	assert.That(!ok, t.Errorf, "destroying the position should fail")
 }
 
-func catchPanic(f func()) (p interface{}) {
-	defer func() { p = recover() }()
-	f()
-	return p
+func TestAPositionThatDoesNotExistIsNotTaken(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	// when
+	pos := space.At(game.P(13, 25))
+
+	// then
+	assert.That(!pos.Taken(), t.Errorf, "the position should not be taken")
+}
+
+func TestAPositionThatWasCreatedIsNotTakenByDefault(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+
+	// when
+	pos.Create()
+
+	// then
+	assert.That(!pos.Taken(), t.Errorf, "the position should not be taken")
+}
+
+func TestAPositionThatDoesNotExistCannotBeTaken(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+
+	// when
+	ok := pos.Take()
+
+	// then
+	assert.That(!ok, t.Errorf, "taking the pos should fail")
+}
+
+func TestAPositionThatExistCanBeTaken(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+
+	// when
+	ok := pos.Take()
+
+	// then
+	assert.That(ok, t.Errorf, "taking the position should succeed")
+}
+
+func TestAPositionCannotBeTakenTwice(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	ok := pos.Take()
+
+	// then
+	assert.That(!ok, t.Errorf, "taking the position for a second time should fail")
+}
+
+func TestAPositionThatWasTakenSaysSo(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	taken := pos.Taken()
+
+	// then
+	assert.That(taken, t.Errorf, "the position was taken but says it was not")
+}
+
+func TestAPositionCreatedAgainRemainsTaken(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	pos.Create()
+
+	// then
+	taken := pos.Taken()
+	assert.That(taken, t.Errorf, "the position was taken but says it was not")
+}
+
+func TestATakenPositionCannotBeDestroyed(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	ok := pos.Destroy()
+
+	// then
+	assert.That(!ok, t.Errorf, "desroying the position should fail")
+}
+
+func TestAPositionThatDoesNotExistCannotBeFreed(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+
+	// when
+	ok := pos.Free()
+
+	// then
+	assert.That(!ok, t.Errorf, "freeing the position should fail")
+}
+
+func TestAPositionThatIsNotTakenCannotBeFreed(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+
+	// when
+	ok := pos.Free()
+
+	// then
+	assert.That(!ok, t.Errorf, "freeing the position should fail")
+}
+
+func TestAPositionThatIsTakenCanBeFreed(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	ok := pos.Free()
+
+	// then
+	assert.That(ok, t.Errorf, "freeing the position should succeed")
+}
+
+func TestAFreedPositionIsNotTaken(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+	pos.Create()
+	pos.Take()
+
+	// when
+	pos.Free()
+
+	// then
+	assert.That(!pos.Taken(), t.Errorf, "position should not be taken")
 }
