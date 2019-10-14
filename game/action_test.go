@@ -240,34 +240,132 @@ func TestWaitWithSomeTimeAlreadyElapsed(t *testing.T) {
 		t.Errorf, "got status %#v, want %#v", status, statusWanted)
 }
 
+func TestProgress(t *testing.T) {
+	tests := map[string]struct {
+		Needed time.Duration
+		Steps  []time.Duration
+
+		Status   game.ActionStatus
+		Progress float64
+	}{
+		"Start": {
+			Needed: 3 * time.Second,
+		},
+		"Start/Instant": {
+			Needed: 0,
+
+			Progress: 1,
+		},
+
+		"Halfway": {
+			Needed: 2 * time.Second,
+			Steps: []time.Duration{
+				time.Second,
+			},
+
+			Progress: 0.5,
+		},
+		"Halfway/InTwoSteps": {
+			Needed: 2 * time.Second,
+			Steps: []time.Duration{
+				time.Second / 2,
+				time.Second / 2,
+			},
+
+			Progress: 0.5,
+		},
+
+		"Complete": {
+			Needed: time.Second,
+			Steps: []time.Duration{
+				time.Second,
+			},
+
+			Status:   game.Done(0),
+			Progress: 1,
+		},
+		"Complete/InTwoSteps": {
+			Needed: 2 * time.Second,
+			Steps: []time.Duration{
+				time.Second,
+				time.Second,
+			},
+
+			Status:   game.Done(0),
+			Progress: 1,
+		},
+
+		"AfterDone": {
+			Needed: time.Second,
+			Steps: []time.Duration{
+				time.Second,
+				time.Second,
+			},
+
+			Status:   game.Done(time.Second),
+			Progress: 1,
+		},
+		"AfterDone/WithTimeToSpare": {
+			Needed: time.Second,
+			Steps: []time.Duration{
+				2 * time.Second,
+			},
+
+			Status:   game.Done(time.Second),
+			Progress: 1,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// given
+			progress := game.Progress(tt.Needed)
+
+			// when
+			var status game.ActionStatus
+			for _, dt := range tt.Steps {
+				status = progress.Run(dt)
+			}
+
+			// then
+			assert.That(
+				status == tt.Status,
+				t.Errorf, "got status %#v, want %#v", status, tt.Status)
+			assert.That(
+				progress.Progress() == tt.Progress,
+				t.Errorf, "got progress %f, want %f", progress.Progress(), tt.Progress)
+		})
+	}
+}
+
 func TestSequence(t *testing.T) {
-	kases := map[string]struct {
+	tests := map[string]struct {
 		Steps  []game.Action
 		Times  []time.Duration
 		Status game.ActionStatus
 	}{
-		"empty": {
+		"Empty": {
 			Times:  []time.Duration{time.Second},
 			Status: game.Done(time.Second),
 		},
 
-		"singleStep/insufficientTime": {
+		"SingleStep/InsufficientTime": {
 			Steps:  []game.Action{game.Wait(3 * time.Second)},
 			Times:  []time.Duration{2 * time.Second},
 			Status: game.Paused(),
 		},
-		"singleStep/exactTime": {
+		"SingleStep/ExactTime": {
 			Steps:  []game.Action{game.Wait(time.Second)},
 			Times:  []time.Duration{time.Second},
 			Status: game.Done(0),
 		},
-		"singleStep/timeToSpare": {
+		"SingleStep/TimeToSpare": {
 			Steps:  []game.Action{game.Wait(time.Second)},
 			Times:  []time.Duration{3 * time.Second},
 			Status: game.Done(2 * time.Second),
 		},
 
-		"twoSteps/first/insufficientTime": {
+		"TwoSteps/First/InsufficientTime": {
 			Steps: []game.Action{
 				game.Wait(2 * time.Second),
 				game.Wait(3 * time.Second),
@@ -275,7 +373,7 @@ func TestSequence(t *testing.T) {
 			Times:  []time.Duration{time.Second},
 			Status: game.Paused(),
 		},
-		"twoSteps/first/exactTime": {
+		"TwoSteps/First/ExactTime": {
 			Steps: []game.Action{
 				game.Wait(2 * time.Second),
 				game.Wait(3 * time.Second),
@@ -283,7 +381,7 @@ func TestSequence(t *testing.T) {
 			Times:  []time.Duration{2 * time.Second},
 			Status: game.Paused(),
 		},
-		"twoSteps/second/insufficientTime": {
+		"TwoSteps/Second/InsufficientTime": {
 			Steps: []game.Action{
 				game.Wait(2 * time.Second),
 				game.Wait(3 * time.Second),
@@ -291,7 +389,7 @@ func TestSequence(t *testing.T) {
 			Times:  []time.Duration{4 * time.Second},
 			Status: game.Paused(),
 		},
-		"twoSteps/second/exactTime": {
+		"TwoSteps/Second/ExactTime": {
 			Steps: []game.Action{
 				game.Wait(2 * time.Second),
 				game.Wait(3 * time.Second),
@@ -299,7 +397,7 @@ func TestSequence(t *testing.T) {
 			Times:  []time.Duration{5 * time.Second},
 			Status: game.Done(0),
 		},
-		"twoSteps/second/timeToSpare": {
+		"TwoSteps/Second/TimeToSpare": {
 			Steps: []game.Action{
 				game.Wait(2 * time.Second),
 				game.Wait(3 * time.Second),
@@ -308,7 +406,7 @@ func TestSequence(t *testing.T) {
 			Status: game.Done(time.Second),
 		},
 
-		"interruptFirst": {
+		"Interrupted": {
 			Steps: []game.Action{
 				game.Interrupt(),
 				game.Wait(time.Second),
@@ -318,22 +416,22 @@ func TestSequence(t *testing.T) {
 		},
 	}
 
-	for name, kase := range kases {
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			assert.That(len(kase.Times) > 0, t.Errorf, "case %q has no times specified", name)
-			action := game.Sequence(kase.Steps...)
-			var status game.ActionStatus
+			assert.That(len(tt.Times) > 0, t.Errorf, "case %q has no times specified", name)
+			action := game.Sequence(tt.Steps...)
 
 			// when
-			for _, t := range kase.Times {
+			var status game.ActionStatus
+			for _, t := range tt.Times {
 				status = action.Run(t)
 			}
 
 			// then
 			assert.That(
-				status == kase.Status,
-				t.Errorf, "final action status is %#v, want %#v", status, kase.Status)
+				status == tt.Status,
+				t.Errorf, "final action status is %#v, want %#v", status, tt.Status)
 		})
 	}
 }

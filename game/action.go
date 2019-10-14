@@ -106,6 +106,38 @@ func (w *_Wait) Run(timeLeft time.Duration) ActionStatus {
 	return Done(timeLeft - w.toEnd)
 }
 
+// Progress creates a ProgressAction that takes some needed time.
+func Progress(needed time.Duration) ProgressAction {
+	return ProgressAction{
+		needed: needed,
+	}
+}
+
+// A ProgressAction takes up some time and can say how far along it is.
+type ProgressAction struct {
+	elapsed, needed time.Duration
+}
+
+// Progress says how far along the action is.
+// It starts at 0 and ends at 1.
+func (p *ProgressAction) Progress() float64 {
+	if p.needed == 0 {
+		return 1
+	}
+	return float64(p.elapsed) / float64(p.needed)
+}
+
+// Run implements the action interface.
+func (p *ProgressAction) Run(timeLeft time.Duration) ActionStatus {
+	neededLeft := p.needed - p.elapsed
+	if timeLeft >= neededLeft {
+		p.elapsed = p.needed
+		return Done(timeLeft - neededLeft)
+	}
+	p.elapsed += timeLeft
+	return Paused()
+}
+
 // Sequence creates an action that runs several steps one after another.
 func Sequence(steps ...Action) Action {
 	return &_Sequence{steps}
