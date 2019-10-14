@@ -13,7 +13,7 @@ type Action interface {
 	//
 	// The returned status says if the action has completed.
 	// It also says how much time is left after it has run.
-	Run(timeLeft time.Duration) ActionStatus
+	Run(atMost time.Duration) ActionStatus
 }
 
 // An ActionStatus says whether an action completed.
@@ -74,8 +74,8 @@ type _NoAction struct{}
 
 var _noAction = &_NoAction{}
 
-func (*_NoAction) Run(timeLeft time.Duration) ActionStatus {
-	return Done(timeLeft)
+func (*_NoAction) Run(atMost time.Duration) ActionStatus {
+	return Done(atMost)
 }
 
 // Interrupt returns an action that immediately interrupts.
@@ -85,8 +85,8 @@ type _Interrupt struct{}
 
 var _interrupt = &_Interrupt{}
 
-func (*_Interrupt) Run(timeLeft time.Duration) ActionStatus {
-	return Interrupted(timeLeft)
+func (*_Interrupt) Run(atMost time.Duration) ActionStatus {
+	return Interrupted(atMost)
 }
 
 // Wait returns an action that lasts waitTime but does nothing.
@@ -98,12 +98,12 @@ type _Wait struct {
 	toEnd time.Duration
 }
 
-func (w *_Wait) Run(timeLeft time.Duration) ActionStatus {
-	if timeLeft < w.toEnd {
-		w.toEnd -= timeLeft
+func (w *_Wait) Run(atMost time.Duration) ActionStatus {
+	if atMost < w.toEnd {
+		w.toEnd -= atMost
 		return Paused()
 	}
-	return Done(timeLeft - w.toEnd)
+	return Done(atMost - w.toEnd)
 }
 
 // Progress creates a ProgressAction that takes some needed time.
@@ -128,13 +128,13 @@ func (p *ProgressAction) Progress() float64 {
 }
 
 // Run implements the action interface.
-func (p *ProgressAction) Run(timeLeft time.Duration) ActionStatus {
+func (p *ProgressAction) Run(atMost time.Duration) ActionStatus {
 	neededLeft := p.needed - p.elapsed
-	if timeLeft >= neededLeft {
+	if atMost >= neededLeft {
 		p.elapsed = p.needed
-		return Done(timeLeft - neededLeft)
+		return Done(atMost - neededLeft)
 	}
-	p.elapsed += timeLeft
+	p.elapsed += atMost
 	return Paused()
 }
 
@@ -147,8 +147,8 @@ type _Sequence struct {
 	steps []Action
 }
 
-func (seq *_Sequence) Run(timeLeft time.Duration) ActionStatus {
-	lastStatus := Done(timeLeft)
+func (seq *_Sequence) Run(atMost time.Duration) ActionStatus {
+	lastStatus := Done(atMost)
 	for lastStatus.HasTimeLeft() && seq.hasStepsLeft() {
 		lastStatus = seq.runStep(lastStatus.TimeLeft())
 	}
@@ -162,8 +162,8 @@ func (seq *_Sequence) hasStepsLeft() bool {
 	return len(seq.steps) > 0
 }
 
-func (seq *_Sequence) runStep(timeLeft time.Duration) ActionStatus {
-	status := seq.steps[0].Run(timeLeft)
+func (seq *_Sequence) runStep(atMost time.Duration) ActionStatus {
+	status := seq.steps[0].Run(atMost)
 	if status.Interrupted() {
 		seq.steps = nil
 	} else if status.Done() {
