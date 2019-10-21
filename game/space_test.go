@@ -6,6 +6,7 @@ package game_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/szabba/assert"
 
@@ -412,6 +413,147 @@ func TestSpaceTakerIsNotifiedWhenItIsForcedOutOfAPosition(t *testing.T) {
 	assert.That(
 		taker.Calls[1] == expectedCall,
 		t.Fatalf, "got %d call %#v, wan %#v", 1, taker.Calls[1], expectedCall)
+}
+
+func TestActionTakingAFreePositionSucceeds(t *testing.T) {
+	// given
+	action, pos, _ := setUpActionTakingPosition()
+	pos.Create()
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	assert.That(
+		status == game.Done(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, game.Done(time.Second))
+}
+
+func TestActionTakingAFreePositionCallsTheSpaceTaker(t *testing.T) {
+	// given
+	action, pos, taker := setUpActionTakingPosition()
+	pos.Create()
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	expectedCall := RecordedSpaceTakerCall{Method: "LetOnto", Position: pos}
+	assert.That(
+		len(taker.Calls) == 1,
+		t.Fatalf, "got %d space taker calls, want %d", len(taker.Calls), 1)
+	assert.That(
+		taker.Calls[0] == expectedCall,
+		t.Errorf, "got %d call %#v, want %#v", taker.Calls[0], expectedCall)
+}
+
+func TestActionTakingAFreePositionTakesIt(t *testing.T) {
+	// given
+	action, pos, _ := setUpActionTakingPosition()
+	pos.Create()
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	assert.That(
+		pos.Taken(),
+		t.Errorf, "position at %#v should be taken", pos.AtPoint())
+}
+
+func TestActionTakingATakenPositionFails(t *testing.T) {
+	// given
+	action, pos, _ := setUpActionTakingPosition()
+	pos.Create()
+	pos.Take(game.DummyTaker())
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	assert.That(
+		status == game.Interrupted(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, game.Interrupted(time.Second))
+}
+
+func TestActionTakingATakenPositionLeavesThePositionStateAsIs(t *testing.T) {
+	// given
+	action, pos, _ := setUpActionTakingPosition()
+	pos.Create()
+	pos.Take(game.DummyTaker())
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	assert.That(
+		pos.Taken(),
+		t.Errorf, "the position %#v should be taken", pos)
+}
+
+func TestActionTakingATakenPositionDoesNotCallTheSpaceTaker(t *testing.T) {
+	// given
+	action, pos, taker := setUpActionTakingPosition()
+	pos.Create()
+	pos.Take(game.DummyTaker())
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	assert.That(
+		len(taker.Calls) == 0,
+		t.Fatalf, "got %d space taker calls, want %d", len(taker.Calls), 0)
+}
+
+func TestActionTakingANonExistentPositionFails(t *testing.T) {
+	// given
+	action, _, _ := setUpActionTakingPosition()
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	assert.That(
+		status == game.Interrupted(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, game.Interrupted(time.Second))
+}
+
+func TestActionTakingANonExistentPositionLeavesThePositionStateAsIs(t *testing.T) {
+	// given
+	action, pos, _ := setUpActionTakingPosition()
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	assert.That(
+		!pos.Exists(),
+		t.Errorf, "the position %#v should not exist", pos)
+}
+
+func TestActionTakingANonExistentPositionDoesNotCallTheSpaceTaker(t *testing.T) {
+	// given
+	action, _, taker := setUpActionTakingPosition()
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	assert.That(
+		len(taker.Calls) == 0,
+		t.Fatalf, "got %d space taker calls, want %d", len(taker.Calls), 0)
+}
+
+func setUpActionTakingPosition() (*game.TakePositionAction, game.Position, *RecordingSpaceTaker) {
+	space := game.NewSpace()
+	pos := space.At(game.P(13, 25))
+
+	var taker RecordingSpaceTaker
+
+	action := game.TakePosition(pos, &taker)
+
+	return action, pos, &taker
 }
 
 type RecordingSpaceTaker struct {

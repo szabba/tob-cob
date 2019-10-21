@@ -4,6 +4,8 @@
 
 package game
 
+import "time"
+
 // A Space where things can exist and interact.
 //
 // It is a subspace of a 2D grid.
@@ -111,3 +113,28 @@ var _dummyTaker = &_DummyTaker{}
 
 func (*_DummyTaker) LetOnto(_ Position)  {}
 func (*_DummyTaker) ForceOff(_ Position) {}
+
+// TakePositionAction is an action that tries to immediately take a position.
+type TakePositionAction struct {
+	pos   Position
+	taker SpaceTaker
+}
+
+// TakePosition builds a TakePositionAcion.
+func TakePosition(pos Position, taker SpaceTaker) *TakePositionAction {
+	return &TakePositionAction{
+		pos:   pos,
+		taker: taker,
+	}
+}
+
+var _ Action = &TakePositionAction{}
+
+// Run immediately takes the position or fails interrupting the action.
+func (action *TakePositionAction) Run(atMost time.Duration) ActionStatus {
+	if action.pos.Take(action.taker) {
+		return Done(atMost)
+	} else {
+		return Interrupted(atMost)
+	}
+}
