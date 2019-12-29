@@ -134,7 +134,6 @@ var _ Action = &TakePositionAction{}
 func (action *TakePositionAction) Run(atMost time.Duration) ActionStatus {
 	if action.pos.Take(action.taker) {
 		return Done(atMost)
-	} else {
-		return Interrupted(atMost)
 	}
+	return Interrupted(atMost)
 }
