@@ -545,7 +545,7 @@ func TestActionTakingANonExistentPositionDoesNotCallTheSpaceTaker(t *testing.T) 
 		t.Fatalf, "got %d space taker calls, want %d", len(taker.Calls), 0)
 }
 
-func setUpActionTakingPosition() (*game.TakePositionAction, game.Position, *RecordingSpaceTaker) {
+func setUpActionTakingPosition() (game.Action, game.Position, *RecordingSpaceTaker) {
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
 
