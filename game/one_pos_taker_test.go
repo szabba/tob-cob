@@ -58,12 +58,8 @@ func TestOnePosTakerCanBeMovedToNewPosition(t *testing.T) {
 	// then
 	assert.That(taker.Placed(), t.Errorf, "the taker is not placed - it should")
 	assert.That(
-		taker.Position() != nil,
-		t.Fatalf, "got nil pointer to position, want one to position at %#v", dst.AtPoint())
-	assert.That(
-		*taker.Position() == dst,
-		t.Fatalf, "got pointer to position at %#v, want one to position at %#v",
-		taker.Position().AtPoint(), dst.AtPoint())
+		taker.AtPoint() == dst.AtPoint(),
+		t.Fatalf, "reported at point %#v - want %#v", taker.AtPoint(), dst.AtPoint())
 }
 
 func TestOnePosTakerLeavesOldPosition(t *testing.T) {
@@ -82,4 +78,23 @@ func TestOnePosTakerLeavesOldPosition(t *testing.T) {
 
 	// then
 	assert.That(!src.Taken(), t.Errorf, "the original position is still taken")
+}
+
+func TestOnePosTakerCanLeaveTakenPosition(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(2, 3))
+	pos.Create()
+
+	taker := game.OnePosTaker{}
+	pos.Take(&taker)
+
+	// when
+	taker.Leave()
+
+	// then
+	assert.That(!taker.Placed(), t.Errorf, "the taker is placed - it should not be")
+	assert.That(
+		taker.AtPoint() == game.Point{},
+		t.Fatalf, "reported at point %#v - want %#v", taker.AtPoint(), game.Point{})
 }

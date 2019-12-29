@@ -32,3 +32,12 @@ func (taker *OnePosTaker) Placed() bool {
 // Do not use that to check if the taker is placed.
 // A taker might be taking the position at the zero point.
 func (taker *OnePosTaker) AtPoint() Point { return taker.pos.AtPoint() }
+
+// Leave makes the taker leave a position if it has one taken.
+func (taker *OnePosTaker) Leave() {
+	if !taker.Placed() {
+		return
+	}
+	taker.pos.Free()
+	taker.pos = Position{}
+}
