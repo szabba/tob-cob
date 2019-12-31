@@ -337,3 +337,38 @@ func TestSequence(t *testing.T) {
 		})
 	}
 }
+
+func TestSequenceRunsFirstActionForZeroTimeWhenNoneIsGiven(t *testing.T) {
+	// given
+	action := &StepRecordingAction{}
+	sequence := game.Sequence(action)
+
+	// when
+	sequence.Run(0)
+
+	// then
+	assert.That(len(action.Steps) == 1, t.Fatalf, "got %d steps run - want %d", len(action.Steps), 1)
+	assert.That(action.Steps[0] == 0, t.Errorf, "got step %d of length %s - want %s", 0, action.Steps[0], 0)
+}
+
+func TestSequenceRunsRemainingStepForZeroTimeIfNoneIsLeft(t *testing.T) {
+	// given
+	action := &StepRecordingAction{}
+	sequence := game.Sequence(game.Wait(time.Second), action)
+
+	// when
+	sequence.Run(time.Second)
+
+	// then
+	assert.That(len(action.Steps) == 1, t.Fatalf, "got %d steps run - want %d", len(action.Steps), 1)
+	assert.That(action.Steps[0] == 0, t.Errorf, "got step %d of length %s - want %s", 0, action.Steps[0], 0)
+}
+
+type StepRecordingAction struct {
+	Steps []time.Duration
+}
+
+func (action *StepRecordingAction) Run(atMost time.Duration) game.ActionStatus {
+	action.Steps = append(action.Steps, atMost)
+	return game.Paused()
+}

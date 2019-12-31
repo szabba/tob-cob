@@ -4,7 +4,9 @@
 
 package game
 
-import "time"
+import (
+	"time"
+)
 
 // An Action is a process stretched out in time.
 type Action interface {
@@ -116,12 +118,12 @@ type _Sequence struct {
 }
 
 func (seq *_Sequence) Run(atMost time.Duration) ActionStatus {
-	lastStatus := Done(atMost)
-	for lastStatus.HasTimeLeft() && seq.hasStepsLeft() {
-		lastStatus = seq.runStep(lastStatus.TimeLeft())
+	status := Done(atMost)
+	for status.Done() && seq.hasStepsLeft() {
+		status = seq.runStep(status.TimeLeft())
 	}
 	if !seq.hasStepsLeft() {
-		return lastStatus
+		return status
 	}
 	return Paused()
 }
