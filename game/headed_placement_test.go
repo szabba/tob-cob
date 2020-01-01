@@ -193,6 +193,30 @@ func TestFreshlyPlacedHeadedPlacementHasNoHeading(t *testing.T) {
 	assertNotHeaded(t, &placement)
 }
 
+func TestHeadedPlacementLosesHeadingAfterBeingPlaced(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(2, 3))
+	pos.Create()
+	moveDst := space.At(game.P(2, 4))
+	moveDst.Create()
+	dst := space.At(game.P(1, 3))
+
+	placement := game.HeadedPlacement{}
+	placement.Place(pos)
+
+	timeNeeded := 4 * time.Second
+	action := placement.MoveTo(moveDst, timeNeeded)
+	action.Run(0)
+
+	// when
+	ok := placement.Place(dst)
+
+	// then
+	assert.That(ok, t.Errorf, "the placement should succeed - it failed")
+	assertNotHeaded(t, &placement)
+}
+
 func assertNotPlaced(t *testing.T, pl *game.HeadedPlacement) {
 	assert.That(!pl.Placed(), t.Errorf, "placement is placed - it should not be")
 	assert.That(
@@ -211,7 +235,7 @@ func assertNotHeaded(t *testing.T, pl *game.HeadedPlacement) {
 	assert.That(!pl.Headed(), t.Errorf, "placement is headed - it should not be")
 	assert.That(
 		pl.Heading() == game.Point{},
-		t.Errorf, "reported headint to %#v - should be %#v", pl.AtPoint(), game.Point{})
+		t.Errorf, "reported heading to %#v - should be %#v", pl.AtPoint(), game.Point{})
 }
 
 func assertHeaded(t *testing.T, pl *game.HeadedPlacement, to game.Point) {
