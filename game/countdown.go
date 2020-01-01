@@ -4,16 +4,21 @@
 
 package game
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // A Countdown tracks progress towards reaching a numerical goal.
+// The zero value is a completed countdown with a goal of 0.
 type Countdown struct {
 	elapsed, needed int
 }
 
-// CountdownTo creates a countdown with the specified targer value.
-func CountdownTo(needed int) Countdown {
-	return Countdown{needed: needed}
+// ResetTarget sets a new target value and resets all progress made.
+func (c *Countdown) ResetTarget(needed int) {
+	c.elapsed = 0
+	c.needed = needed
 }
 
 // Progress says how far along the countdown is.
@@ -38,21 +43,28 @@ func (c *Countdown) CountDown(atMost int) (leftOver int) {
 	return 0
 }
 
-// CountdownOver creates a countdown with an associated action.
+// Action creates an action that makes the countdown progress run.
 // The countdown completes when the action does.
-func CountdownOver(needed time.Duration) (*Countdown, Action) {
-	progress := CountdownTo(int(needed))
-	return &progress, &_ProgressAction{&progress}
+func (c *Countdown) Action(lasting time.Duration) Action {
+	return &_CountdownAction{lasting: lasting, countdown: c}
 }
 
-type _ProgressAction struct {
-	progress *Countdown
+type _CountdownAction struct {
+	once      sync.Once
+	lasting   time.Duration
+	countdown *Countdown
 }
 
-func (action *_ProgressAction) Run(atMost time.Duration) ActionStatus {
-	leftOver := action.progress.CountDown(int(atMost))
-	if action.progress.Progress() < 1 {
+func (action *_CountdownAction) Run(atMost time.Duration) ActionStatus {
+	action.once.Do(action.init)
+	leftOver := action.countdown.CountDown(int(atMost))
+	if action.countdown.Progress() < 1 {
 		return Paused()
 	}
 	return Done(time.Duration(leftOver))
+}
+
+func (action *_CountdownAction) init() {
+	needed := int(action.lasting)
+	action.countdown.ResetTarget(needed)
 }

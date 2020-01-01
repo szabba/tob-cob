@@ -15,7 +15,7 @@ import (
 //     - moving from one point to another
 type HeadedPlacement struct {
 	pos, heading OnePosTaker
-	countdown    *Countdown
+	countdown    Countdown
 }
 
 // Placed says whether the placement takes up some position.
@@ -58,18 +58,18 @@ func (hp *HeadedPlacement) MoveTo(dst Position, dt time.Duration) Action {
 	}
 	return Sequence(
 		TakePosition(dst, &hp.heading),
-		hp.waitAction(dt),
+		hp.countdown.Action(dt),
 		hp.arriveAction(dst))
 }
 
 // Progress says how far along the placement is in the move from the start position to the heading.
 // This is 1 when the placement is not headed anywhere.
 func (hp *HeadedPlacement) Progress() float64 {
+	if !hp.Placed() {
+		return 0
+	}
 	if hp.Placed() && !hp.Headed() {
 		return 1
-	}
-	if hp.countdown == nil {
-		return 0
 	}
 	return hp.countdown.Progress()
 }
@@ -87,22 +87,4 @@ func (action *_PlacemnetArriveAction) Run(atMost time.Duration) ActionStatus {
 	action.placement.heading.Leave()
 	action.dst.Take(&action.placement.pos)
 	return Done(atMost)
-}
-
-func (hp *HeadedPlacement) waitAction(needed time.Duration) Action {
-	countdown, action := CountdownOver(needed)
-	return &_PlacementWaitAction{hp, countdown, action}
-}
-
-type _PlacementWaitAction struct {
-	placement *HeadedPlacement
-	countdown *Countdown
-	action    Action
-}
-
-// TODO: Will be mess when two moves on the same placement interleaved.
-func (action *_PlacementWaitAction) Run(atMost time.Duration) ActionStatus {
-	action.placement.countdown = action.countdown
-	status := action.action.Run(atMost)
-	return status
 }

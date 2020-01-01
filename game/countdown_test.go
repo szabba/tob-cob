@@ -20,13 +20,11 @@ func TestCountdown(t *testing.T) {
 		LeftOver int
 		Progress float64
 	}{
+		"Zero": {
+			Progress: 1,
+		},
 		"Start": {
 			Needed: 3,
-		},
-		"Start/Instant": {
-			Needed: 0,
-
-			Progress: 1,
 		},
 
 		"Halfway": {
@@ -74,7 +72,8 @@ func TestCountdown(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			countdown := game.CountdownTo(tt.Needed)
+			countdown := game.Countdown{}
+			countdown.ResetTarget(tt.Needed)
 
 			// when
 			var leftOver int
@@ -101,11 +100,11 @@ func TestCountdownOver(t *testing.T) {
 		Status   game.ActionStatus
 		Progress float64
 	}{
-		"Start": {
-			Needed: 3 * time.Second,
+		"Zero": {
+			Progress: 1,
 		},
-		"Start/Instant": {
-			Needed: 0,
+		"Start": {
+			Needed: time.Second,
 
 			Progress: 1,
 		},
@@ -172,7 +171,8 @@ func TestCountdownOver(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			countdown, action := game.CountdownOver(tt.Needed)
+			countdown := game.Countdown{}
+			action := countdown.Action(tt.Needed)
 
 			// when
 			var status game.ActionStatus
