@@ -68,9 +68,6 @@ func (hp *HeadedPlacement) Progress() float64 {
 	if !hp.Placed() {
 		return 0
 	}
-	if hp.Placed() && !hp.Headed() {
-		return 1
-	}
 	return hp.countdown.Progress()
 }
 

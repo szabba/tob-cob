@@ -32,7 +32,6 @@ func (c Countdown) Progress() float64 {
 
 // CountDown tracks progress being made towards a countdown.
 // The countdown gets closer to completion with bigger arguments.
-//
 func (c *Countdown) CountDown(atMost int) (leftOver int) {
 	neededLeft := c.needed - c.elapsed
 	if atMost >= neededLeft {

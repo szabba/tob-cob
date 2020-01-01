@@ -135,6 +135,21 @@ func TestPlacedHeadedPlacementCanMove(t *testing.T) {
 	assert.That(!pos.Taken(), t.Errorf, "%#v should not be taken, but it is", pos.AtPoint())
 }
 
+func TestPlacedHeadedPlacementHasCompleted(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	pos := space.At(game.P(2, 3))
+	pos.Create()
+
+	placement := game.HeadedPlacement{}
+
+	// when
+	placement.Place(pos)
+
+	// then
+	assert.That(placement.Progress() == 1, t.Errorf, "got progress %f - want %f", placement.Progress(), 1)
+}
+
 func TestPlacedHeadedPlacementBecomesHeadedWhenAMoveStarts(t *testing.T) {
 	// given
 	space := game.NewSpace()
