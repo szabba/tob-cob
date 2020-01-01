@@ -5,7 +5,10 @@
 package main
 
 import (
+	"fmt"
 	_ "image/png"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -30,6 +33,12 @@ var (
 func run() {
 	log.Logger = log.Logger.Level(zerolog.InfoLevel)
 
+	execDir, err := execDir()
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return
+	}
+
 	wcfg := pixelgl.WindowConfig{
 		Title:  "Tears of Butterflies: Colors of Blood",
 		Bounds: pixel.R(0, 0, 800, 600),
@@ -46,12 +55,12 @@ func run() {
 	cam := ui.NewCamera(pixel.V(50, 0))
 	camCont := ui.NewCamController(&cam)
 
-	humanoidSprite, err := ui.LoadSprite("assets/humanoid.png", ui.AnchorSouth())
+	humanoidSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/humanoid.png"), ui.AnchorSouth())
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		return
 	}
-	cursorSprite, err := ui.LoadSprite("assets/cursor.png", ui.AnchorNorthWest())
+	cursorSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/cursor.png"), ui.AnchorNorthWest())
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		return
@@ -129,4 +138,13 @@ func placementTransform(grid ui.Grid, placement game.HeadedPlacement) pixel.Matr
 		}
 	}
 	return mat
+}
+
+func execDir() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("cannot get the current executable's directory: %w", err)
+	}
+	dir := filepath.Dir(path)
+	return dir, nil
 }
