@@ -6,6 +6,8 @@ package ui
 
 import (
 	"github.com/faiface/pixel"
+
+	"github.com/szabba/tob-cob/game"
 )
 
 type Grid struct {
@@ -24,4 +26,22 @@ func (grid Grid) Matrix(col, row int) pixel.Matrix {
 
 func (grid Grid) Cell(col, row int) Cell {
 	return Cell{col, row, grid}
+}
+
+type GridOutline struct {
+	Space *game.Space
+	Grid  Grid
+}
+
+func (o GridOutline) Draw(dst pixel.Target) {
+	min, max := o.Space.Min(), o.Space.Max()
+	var pt game.Point
+	for pt.Row = min.Row; pt.Row <= max.Row; pt.Row++ {
+		for pt.Column = min.Column; pt.Column <= max.Column; pt.Column++ {
+			if !o.Space.At(pt).Exists() {
+				continue
+			}
+			o.Grid.Cell(pt.Column, pt.Row).Draw(dst)
+		}
+	}
 }

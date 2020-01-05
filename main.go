@@ -71,6 +71,11 @@ func run() {
 	space.At(game.P(0, 1)).Create()
 	space.At(game.P(1, 0)).Create()
 	space.At(game.P(1, 1)).Create()
+	space.At(game.P(-1, 0)).Create()
+	space.At(game.P(-2, -1)).Create()
+
+	outline := ui.GridOutline{Space: space, Grid: grid}
+
 	placement := game.HeadedPlacement{}
 	placement.Place(space.At(game.P(1, 1)))
 	action := game.NoAction()
@@ -110,12 +115,8 @@ func run() {
 
 		w.Clear(Black)
 
-		w.Canvas().SetMatrix(cam.Matrix(w.Bounds()))
-		grid.Cell(0, 0).Draw(w)
-		grid.Cell(0, 1).Draw(w)
-		grid.Cell(1, 0).Draw(w)
-		grid.Cell(1, 1).Draw(w)
-
+		w.SetMatrix(cam.Matrix(w.Bounds()))
+		outline.Draw(w)
 		humanoidSprite.Transform(placementTransform(grid, placement)).Draw(w)
 
 		w.SetMatrix(pixel.IM)
