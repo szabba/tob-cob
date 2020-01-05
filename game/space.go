@@ -4,14 +4,18 @@
 
 package game
 
-import "time"
+import (
+	"time"
+)
 
 // A Space where things can exist and interact.
 //
 // It is a subspace of a 2D grid.
 // Which positions on the grid exist can change dynamically.
 type Space struct {
-	poses map[Point]SpaceTaker
+	poses    map[Point]SpaceTaker
+	min, max Point
+	empty    bool
 }
 
 // NewSpace creates a new, empty space.
@@ -28,13 +32,43 @@ func (space *Space) At(at Point) Position {
 	return Position{space, at}
 }
 
+// Min is the point with the column of the leftmost position and row of the bottom one.
+func (space *Space) Min() Point { return space.min }
+
+// Max is the point with the column of the rightmost position and row of the top one.
+func (space *Space) Max() Point { return space.max }
+
+func (space *Space) fixMinMax() {
+	space.empty = true
+	space.min, space.max = Point{}, Point{}
+	for at := range space.poses {
+		space.pickMin(at.Row, &space.min.Row)
+		space.pickMin(at.Column, &space.min.Column)
+		space.pickMax(at.Row, &space.max.Row)
+		space.pickMax(at.Column, &space.max.Column)
+		space.empty = false
+	}
+}
+
+func (space *Space) pickMin(candidate int, dst *int) {
+	if space.empty || candidate < *dst {
+		*dst = candidate
+	}
+}
+
+func (space *Space) pickMax(candidate int, dst *int) {
+	if space.empty || *dst < candidate {
+		*dst = candidate
+	}
+}
+
 // A Position within some space.
 type Position struct {
 	space *Space
 	at    Point
 }
 
-// AtPoint is the point at which the position is in the space that contains it.
+// AtPoint is the point at which the position is in the space that contains it.7
 func (pos Position) AtPoint() Point { return pos.at }
 
 // Exists says whether the position within the space exists.
@@ -50,6 +84,7 @@ func (pos Position) Create() bool {
 		return false
 	}
 	pos.space.poses[pos.at] = nil
+	pos.space.fixMinMax()
 	return true
 }
 
@@ -61,6 +96,7 @@ func (pos Position) Destroy() bool {
 	}
 	ok := pos.Exists()
 	delete(pos.space.poses, pos.at)
+	pos.space.fixMinMax()
 	return ok
 }
 
