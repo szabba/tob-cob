@@ -74,11 +74,16 @@ func run() {
 	space.At(game.P(-1, 0)).Create()
 	space.At(game.P(-2, -1)).Create()
 
+	space.At(game.P(3, 0)).Create()
+	space.At(game.P(3, -1)).Create()
+	space.At(game.P(4, 0)).Create()
+
 	outline := ui.GridOutline{Space: space, Grid: grid}
 
-	placement := game.HeadedPlacement{}
-	placement.Place(space.At(game.P(1, 1)))
-	action := game.NoAction()
+	placements := make([]game.HeadedPlacement, 2)
+	placements[0].Place(space.At(game.P(1, 1)))
+	placements[1].Place(space.At(game.P(4, 0)))
+	actions := []game.Action{game.NoAction(), game.NoAction()}
 
 	w, err := pixelgl.NewWindow(wcfg)
 	if err != nil {
@@ -102,12 +107,18 @@ func run() {
 		}
 
 		if w.JustReleased(pixelgl.KeySpace) {
-			placement.Place(space.At(game.P(1, 1)))
-			action = game.Sequence(
-				placement.MoveTo(space.At(game.P(0, 0)), 3*time.Second),
-				placement.MoveTo(space.At(game.P(1, 0)), 2*time.Second),
-				placement.MoveTo(space.At(game.P(0, 1)), 3*time.Second),
-				placement.MoveTo(space.At(game.P(1, 1)), 2*time.Second),
+			placements[0].Place(space.At(game.P(1, 1)))
+			actions[0] = game.Sequence(
+				placements[0].MoveTo(space.At(game.P(0, 0)), 3*time.Second),
+				placements[0].MoveTo(space.At(game.P(1, 0)), 2*time.Second),
+				placements[0].MoveTo(space.At(game.P(0, 1)), 3*time.Second),
+				placements[0].MoveTo(space.At(game.P(1, 1)), 2*time.Second),
+			)
+			placements[1].Place(space.At(game.P(4, 0)))
+			actions[1] = game.Sequence(
+				placements[1].MoveTo(space.At(game.P(3, 0)), 2*time.Second),
+				placements[1].MoveTo(space.At(game.P(3, -1)), 2*time.Second),
+				placements[1].MoveTo(space.At(game.P(4, 0)), 3*time.Second),
 			)
 		}
 
@@ -117,13 +128,26 @@ func run() {
 
 		w.SetMatrix(cam.Matrix(w.Bounds()))
 		outline.Draw(w)
-		humanoidSprite.Transform(placementTransform(grid, placement)).Draw(w)
+		for _, placement := range placements {
+			humanoidSprite.Transform(placementTransform(grid, placement)).Draw(w)
+		}
 
 		w.SetMatrix(pixel.IM)
 		cursorSprite.Transform(pixel.IM.Moved(w.MousePosition())).Draw(w.Canvas())
 
-		action.Run(dt)
+		for _, action := range actions {
+			runFor(&action, dt)
+		}
 		time.Sleep(dt)
+	}
+}
+
+func runFor(action *game.Action, dt time.Duration) {
+	if action == nil {
+		return
+	}
+	if (*action).Run(dt) != game.Paused() {
+		*action = game.NoAction()
 	}
 }
 
