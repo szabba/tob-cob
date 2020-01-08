@@ -56,17 +56,37 @@ func (cont *CameraController) Process(input Input) {
 
 func (cont *CameraController) lookAtDelta(input Input) pixel.Vec {
 	delta := pixel.ZV
-	if input.Pressed(pixelgl.KeyLeft) {
+	if input.Pressed(pixelgl.KeyLeft) || cont.mouseNearLeftEdge(input) {
 		delta.X -= 5
 	}
-	if input.Pressed(pixelgl.KeyRight) {
+	if input.Pressed(pixelgl.KeyRight) || cont.mouseNearRightEdge(input) {
 		delta.X += 5
 	}
-	if input.Pressed(pixelgl.KeyUp) {
+	if input.Pressed(pixelgl.KeyUp) || cont.mouseNearTopEdge(input) {
 		delta.Y += 5
 	}
-	if input.Pressed(pixelgl.KeyDown) {
+	if input.Pressed(pixelgl.KeyDown) || cont.mouseNearBottomEdge(input) {
 		delta.Y -= 5
 	}
 	return delta
+}
+
+func (*CameraController) mouseNearLeftEdge(input Input) bool {
+	width := input.Bounds().W()
+	return input.MousePosition().X < 0.05*width
+}
+
+func (*CameraController) mouseNearRightEdge(input Input) bool {
+	width := input.Bounds().W()
+	return input.MousePosition().X > 0.95*width
+}
+
+func (*CameraController) mouseNearBottomEdge(input Input) bool {
+	height := input.Bounds().H()
+	return input.MousePosition().Y < 0.05*height
+}
+
+func (*CameraController) mouseNearTopEdge(input Input) bool {
+	height := input.Bounds().H()
+	return input.MousePosition().Y > 0.95*height
 }

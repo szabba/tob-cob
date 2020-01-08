@@ -12,6 +12,7 @@ import (
 type Input interface {
 	Pressed(btn pixelgl.Button) bool
 	MousePosition() pixel.Vec
+	Bounds() pixel.Rect
 }
 
 var _ Input = &pixelgl.Window{}
