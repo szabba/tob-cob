@@ -50,6 +50,9 @@ func NewCamController(cam *Camera) *CameraController {
 }
 
 func (cont *CameraController) Process(input Input) {
+	if !input.Focused() {
+		return
+	}
 	delta := cont.lookAtDelta(input)
 	cont.cam.MoveBy(delta)
 }

@@ -10,6 +10,7 @@ import (
 )
 
 type Input interface {
+	Focused() bool
 	Pressed(btn pixelgl.Button) bool
 	MousePosition() pixel.Vec
 	Bounds() pixel.Rect
