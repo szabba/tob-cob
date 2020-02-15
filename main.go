@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -32,6 +33,11 @@ var (
 
 func run() {
 	log.Logger = log.Logger.Level(zerolog.InfoLevel)
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		log.Warn().Msg("build info unavailable")
+	}
+	log.Info().Interface("build-info", buildInfo).Msg("starting application")
 
 	execDir, err := execDir()
 	if err != nil {
