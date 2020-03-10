@@ -73,22 +73,16 @@ func run() {
 	}
 
 	space := game.NewSpace()
-	space.At(game.P(0, 0)).Create()
-	space.At(game.P(0, 1)).Create()
-	space.At(game.P(1, 0)).Create()
-	space.At(game.P(1, 1)).Create()
-	space.At(game.P(-1, 0)).Create()
-	space.At(game.P(-2, -1)).Create()
-
-	space.At(game.P(3, 0)).Create()
-	space.At(game.P(3, -1)).Create()
-	space.At(game.P(4, 0)).Create()
+	for x := -10; x <= 10; x++ {
+		for y := -10; y <= 10; y++ {
+			space.At(game.P(y, x)).Create()
+		}
+	}
 
 	outline := ui.GridOutline{Space: space, Grid: grid}
 
 	placements := make([]game.HeadedPlacement, 2)
 	placements[0].Place(space.At(game.P(1, 1)))
-	placements[1].Place(space.At(game.P(4, 0)))
 	actions := []game.Action{game.NoAction(), game.NoAction()}
 
 	w, err := pixelgl.NewWindow(wcfg)
@@ -112,20 +106,12 @@ func run() {
 			}
 		}
 
-		if w.JustReleased(pixelgl.KeySpace) {
-			placements[0].Place(space.At(game.P(1, 1)))
-			actions[0] = game.Sequence(
-				placements[0].MoveTo(space.At(game.P(0, 0)), 3*time.Second),
-				placements[0].MoveTo(space.At(game.P(1, 0)), 2*time.Second),
-				placements[0].MoveTo(space.At(game.P(0, 1)), 3*time.Second),
-				placements[0].MoveTo(space.At(game.P(1, 1)), 2*time.Second),
-			)
-			placements[1].Place(space.At(game.P(4, 0)))
-			actions[1] = game.Sequence(
-				placements[1].MoveTo(space.At(game.P(3, 0)), 2*time.Second),
-				placements[1].MoveTo(space.At(game.P(3, -1)), 2*time.Second),
-				placements[1].MoveTo(space.At(game.P(4, 0)), 3*time.Second),
-			)
+		if w.JustPressed(pixelgl.MouseButtonLeft) {
+			src := space.At(game.P(3, 0))
+			dst := space.At(game.P(1, 1))
+			placements[0].Place(src)
+			path, _ := game.NewPathFinder(space).FindPath(src, dst)
+			actions[0] = placements[0].FollowPath(path, time.Second/2)
 		}
 
 		camCont.Process(w)
@@ -141,20 +127,24 @@ func run() {
 		w.SetMatrix(pixel.IM)
 		cursorSprite.Transform(pixel.IM.Moved(w.MousePosition())).Draw(w.Canvas())
 
-		for _, action := range actions {
-			runFor(&action, dt)
+		for i, action := range actions {
+			actions[i] = runFor(action, dt)
 		}
 		time.Sleep(dt)
 	}
 }
 
-func runFor(action *game.Action, dt time.Duration) {
+func runFor(action game.Action, dt time.Duration) game.Action {
 	if action == nil {
-		return
+		return game.NoAction()
 	}
-	if (*action).Run(dt) != game.Paused() {
-		*action = game.NoAction()
+
+	status := action.Run(dt)
+
+	if status.Done() || status.Interrupted() {
+		return game.NoAction()
 	}
+	return action
 }
 
 func placementTransform(grid ui.Grid, placement game.HeadedPlacement) pixel.Matrix {
