@@ -82,6 +82,38 @@ type _PlacemnetArriveAction struct {
 
 func (action *_PlacemnetArriveAction) Run(atMost time.Duration) ActionStatus {
 	action.placement.heading.Leave()
+	// We just made dst available - therefore Take will succeed.
 	action.dst.Take(&action.placement.pos)
+	return Done(atMost)
+}
+
+// FollowPath creates an action that will move the heading along the path.
+// Each step will take stepDt.
+//
+// When first run, the action fails immediately if the heading is not at the initial position of the path.
+func (hp *HeadedPlacement) FollowPath(path Path, stepDt time.Duration) Action {
+	steps := make([]Action, 0, len(path))
+	if len(path) > 0 {
+		steps = append(steps, hp.checkAt(path[0]))
+		for _, dst := range path[1:] {
+			steps = append(steps, hp.MoveTo(dst, stepDt))
+		}
+	}
+	return Sequence(steps...)
+}
+
+func (hp *HeadedPlacement) checkAt(pos Position) Action {
+	return &_PlacementCheckAtAction{hp, pos}
+}
+
+type _PlacementCheckAtAction struct {
+	placement *HeadedPlacement
+	pos       Position
+}
+
+func (action *_PlacementCheckAtAction) Run(atMost time.Duration) ActionStatus {
+	if action.placement.pos.pos != action.pos {
+		return Interrupted(atMost)
+	}
 	return Done(atMost)
 }

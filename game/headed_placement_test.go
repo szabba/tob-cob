@@ -232,6 +232,223 @@ func TestHeadedPlacementLosesHeadingAfterBeingPlaced(t *testing.T) {
 	assertNotHeaded(t, &placement)
 }
 
+// TODO: Test (*HeadedPlacement).FollowPath
+
+func TestFollowingAnEmptyPathCompletesImmediately(t *testing.T) {
+	// given
+	placement := game.HeadedPlacement{}
+
+	path := game.Path{}
+	stepTime := time.Second
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(0)
+
+	// then
+	want := game.Done(0)
+	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
+}
+
+func TestFollowingASinglePositionPathCompletesImmediatelyWhenThePlacementIsAlreadyThere(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	pos := space.At(game.P(1, 2))
+	pos.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(pos)
+
+	path, stepTime := game.Path{pos}, time.Second
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	want := game.Done(time.Second)
+	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
+}
+
+func TestFollowingASinglePositionPathFailsImmediatelyWhenThePlacementIsAlreadyThere(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	pos := space.At(game.P(1, 2))
+	pos.Create()
+
+	placement := game.HeadedPlacement{}
+
+	path, stepTime := game.Path{pos}, time.Second
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	want := game.Interrupted(time.Second)
+	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
+}
+
+func TestFollowingASingleStepPathCompletesAtTheStepTime(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3))
+	src.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, dst}, time.Second
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	want := game.Done(0)
+	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
+}
+
+func TestFollowingASignleStepPathToCompletionPutsThePlacementAtRightPosition(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3))
+	src.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, dst}, time.Second
+	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	want := dst.AtPoint()
+	assert.That(placement.AtPoint() == want, t.Errorf, "placement at %#v, want %#v", placement.AtPoint(), want)
+}
+
+func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesTheActionPaused(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src.Create()
+	mid.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, mid, dst}, time.Second
+	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(time.Second)
+
+	// then
+	want := game.Paused()
+	assert.That(status == want, t.Errorf, "got action status %#v, want %#v", status, want)
+}
+
+func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesThePlacementAtTheMidpoint(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src.Create()
+	mid.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, mid, dst}, time.Second
+	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	action.Run(time.Second)
+
+	// then
+	want := mid.AtPoint()
+	assert.That(placement.AtPoint() == want, t.Errorf, "placement at %#v, want %#v", placement.AtPoint(), want)
+}
+
+func TestFollowingATwoStepPathForTheRequiredTimeLeavesActionDone(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src.Create()
+	mid.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, mid, dst}, time.Second
+	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	status := action.Run(2 * time.Second)
+
+	// then
+	// then
+	want := game.Done(0)
+	assert.That(status == want, t.Errorf, "got action status %#v, want %#v", status, want)
+}
+
+func TestFollowingATwoStepPathForTheRequiredTimeLeavesThePlacementAtTheDestination(t *testing.T) {
+	// given
+	space := game.NewSpace()
+
+	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src.Create()
+	mid.Create()
+	dst.Create()
+
+	placement := game.HeadedPlacement{}
+	placement.Place(src)
+
+	path, stepTime := game.Path{src, mid, dst}, time.Second
+	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
+
+	action := placement.FollowPath(path, stepTime)
+
+	// when
+	action.Run(2 * time.Second)
+
+	// then
+	want := dst.AtPoint()
+	assert.That(placement.AtPoint() == want, t.Errorf, "placement at %#v, want %#v", placement.AtPoint(), want)
+}
+
+// TODO: Better name?
+func assumption(t *testing.T) assert.ErrorFunc {
+	return func(msg string, args ...interface{}) {
+		t.Fatalf("assumption violated: "+msg, args...)
+	}
+}
+
 func assertNotPlaced(t *testing.T, pl *game.HeadedPlacement) {
 	assert.That(!pl.Placed(), t.Errorf, "placement is placed - it should not be")
 	assert.That(
