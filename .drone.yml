@@ -12,7 +12,6 @@ steps:
       - yes | pacman -S go
       - go build ./...
       - go test -cover ./...
-      - go build ./tob-cob
   - name: deploy
     image: archlinux:latest
     commands:
