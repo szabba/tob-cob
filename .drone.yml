@@ -16,8 +16,7 @@ steps:
   - name: deploy
       image: archlinux:latest
       commands:
-        - echo $BUTLER_API_KEY > ~/.config/itch/butler_creds
-        - wc ~/.config/itch/butler_creds
+        - sh deploy.sh
       environment:
         BUTLER_API_KEY:
           from_secret: BUTLER_API_KEY
