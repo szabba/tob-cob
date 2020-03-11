@@ -16,9 +16,15 @@ steps:
     image: archlinux:latest
     commands:
       - yes | pacman -Syu
+      - yes | pacman -S curl
+      - yes | pacman -S unzip
       - mkdir -p ~/.config/itch
       - echo $BUTLER_API_KEY > ~/.config/itch/butler_creds
       - wc ~/.config/itch/butler_creds
+      - curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/15.17.0/archive/default
+      - unzip butler.zip
+      - chmod +x butler
+      - ./butler -v
     environment:
       BUTLER_API_KEY:
         from_secret: BUTLER_API_KEY
