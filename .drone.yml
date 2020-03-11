@@ -6,7 +6,7 @@ steps:
     image: archlinux:latest
     commands:
       - yes | pacman -Syu
-      - yes | pacman -S gcc
+      - yes | pacman -S base-devel
       - yes | pacman -S glfw-x11
       - yes | pacman -S go
       - go build ./...
