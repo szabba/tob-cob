@@ -17,8 +17,10 @@ steps:
       - yes | pacman -S go
       - go build ./...
       - go test -cover ./...
-      - mkdir /out/linux_x64
+      - mkdir /out/linux-x64
       - go build -o /out/linux-x64/tob-cob
+      - mkdir /out/linux-x64/assets
+      - cp -r ./assets/* /out/linux-x64/assets
 
     volumes:
       - name: out
