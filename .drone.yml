@@ -6,6 +6,7 @@ steps:
     image: alpine:3.11.3
     commands:
       - apk add --no-cache go=1.13.4-r1
+      - apk add --no-cache mesa=19.2.7-r0
       - apk add --no-cache glfw=3.2.1-r3
       - go test -cover ./...
       - go build ./...
