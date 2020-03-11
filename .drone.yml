@@ -14,9 +14,10 @@ steps:
       - go test -cover ./...
       - go build ./tob-cob
   - name: deploy
-      image: archlinux:latest
-      commands:
-        - sh deploy.sh
-      environment:
-        BUTLER_API_KEY:
-          from_secret: BUTLER_API_KEY
+    image: archlinux:latest
+    commands:
+      - echo $BUTLER_API_KEY > ~/.config/itch/butler_creds
+      - wc ~/.config/itch/butler_creds
+    environment:
+      BUTLER_API_KEY:
+        from_secret: BUTLER_API_KEY
