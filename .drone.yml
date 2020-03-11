@@ -18,8 +18,7 @@ steps:
       - go build ./...
       - go test -cover ./...
       - mkdir /out/linux_x64
-      - go build -o /out/linux_x64/tob-cob
-      - sha256sum /out/linux_x64/tob-cob
+      - go build -o /out/linux-x64/tob-cob
 
     volumes:
       - name: out
@@ -39,7 +38,7 @@ steps:
       - unzip butler.zip
       - chmod +x butler
       - ./butler -V
-      - ./butler push /out/linux_x64 szabba/tears-of-butterflies-colors-of-blood linux-beta
+      - ./butler push /out/linux-x64 szabba/tears-of-butterflies-colors-of-blood:linux-x64
 
     volumes:
       - name: out
