@@ -1,0 +1,9 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: build
+    image: golang:1.14.0
+    commands:
+      - go test -cover ./...
+      - go build ./...
