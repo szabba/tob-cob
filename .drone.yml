@@ -1,10 +1,6 @@
 kind: pipeline
 name: default
 
-volumes:
-  - name: out
-    temp: {}
-
 steps:
   - name: build
     image: archlinux:latest
@@ -15,12 +11,15 @@ steps:
       - yes | pacman -S pkgconf
       - yes | pacman -S glfw-x11
       - yes | pacman -S go
-      - go build ./...
-      - go test -cover ./...
+      - go build $BUILD_FLAGS ./...
+      - go test $BUILD_FLAGS -cover ./...
       - mkdir /out/linux-x64
-      - go build -o /out/linux-x64/tob-cob
+      - go build $BUILD_FLAGS -o /out/linux-x64/tob-cob
       - mkdir /out/linux-x64/assets
       - cp -r ./assets/* /out/linux-x64/assets
+
+    environment:
+      BUILD_FLAGS: -trimpath
 
     volumes:
       - name: out
@@ -42,10 +41,14 @@ steps:
       - ./butler -V
       - ./butler push /out/linux-x64 szabba/tears-of-butterflies-colors-of-blood:linux-x64
 
+    environment:
+      BUTLER_API_KEY:
+        from_secret: BUTLER_API_KEY
+
     volumes:
       - name: out
         path: /out
 
-    environment:
-      BUTLER_API_KEY:
-        from_secret: BUTLER_API_KEY
+volumes:
+  - name: out
+    temp: {}
