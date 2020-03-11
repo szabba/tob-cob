@@ -39,7 +39,7 @@ steps:
       - unzip butler.zip
       - chmod +x butler
       - ./butler -V
-      - sha256sum /out/linux_x64/tob-cob
+      - ./butler push /out/linux_x64 szabba/tears-of-butterflies-colors-of-blood linux-beta
 
     volumes:
       - name: out
