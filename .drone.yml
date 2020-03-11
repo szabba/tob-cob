@@ -1,9 +1,14 @@
 kind: pipeline
 name: default
 
+volumes:
+  - name: out
+    temp: {}
+
 steps:
   - name: build
     image: archlinux:latest
+
     commands:
       - yes | pacman -Syu
       - yes | pacman -S gcc
@@ -12,8 +17,17 @@ steps:
       - yes | pacman -S go
       - go build ./...
       - go test -cover ./...
+      - mkdir /out/linux_x64
+      - go build -o /out/linux_x64/tob-cob
+      - sha256sum /out/linux_x64/tob-cob
+
+    volumes:
+      - name: out
+        path: /out
+
   - name: deploy
     image: archlinux:latest
+
     commands:
       - yes | pacman -Syu
       - yes | pacman -S curl
@@ -24,7 +38,13 @@ steps:
       - curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/15.17.0/archive/default
       - unzip butler.zip
       - chmod +x butler
-      - ./butler -v
+      - ./butler -V
+      - sha256sum /out/linux_x64/tob-cob
+
+    volumes:
+      - name: out
+        path: /out
+
     environment:
       BUTLER_API_KEY:
         from_secret: BUTLER_API_KEY
