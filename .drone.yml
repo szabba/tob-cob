@@ -40,6 +40,13 @@ steps:
       - ./butler -V
       - ./butler push /out/linux-x64 szabba/tears-of-butterflies-colors-of-blood:linux-x64
 
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+          - cron
+
     environment:
       BUTLER_API_KEY:
         from_secret: BUTLER_API_KEY
