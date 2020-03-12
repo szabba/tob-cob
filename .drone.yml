@@ -3,14 +3,14 @@ name: default
 
 steps:
   - name: build
-    image: archlinux:latest
+    image: ubuntu:xenial-20200212
 
     commands:
-      - yes | pacman -Syu
-      - yes | pacman -S gcc
-      - yes | pacman -S pkgconf
-      - yes | pacman -S glfw-x11
-      - yes | pacman -S go
+      - apt-get update -qq
+      - apt-get install -qy gcc pkg-config libglf3-dev curl
+      - curl -L -o go1.14.linux-amd64.tar.gz https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+      - tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
+      - export PATH=$PATH:/usr/local/go/bin
       - go build $BUILD_FLAGS ./...
       - go test $BUILD_FLAGS -cover ./...
       - mkdir /out/linux-x64
@@ -26,12 +26,11 @@ steps:
         path: /out
 
   - name: deploy
-    image: archlinux:latest
+    image: ubuntu:xenial-20200212
 
     commands:
-      - yes | pacman -Syu
-      - yes | pacman -S curl
-      - yes | pacman -S unzip
+      - apt-get update -qq
+      - apt-get install -qy curl unzip
       - mkdir -p ~/.config/itch
       - echo $BUTLER_API_KEY > ~/.config/itch/butler_creds
       - wc ~/.config/itch/butler_creds
