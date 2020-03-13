@@ -1,0 +1,60 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: build
+    image: ubuntu:xenial-20200212
+
+    commands:
+      - apt-get update -qq
+      - apt-get install -qy gcc pkg-config libglfw3-dev curl
+      - curl -L -o go1.14.linux-amd64.tar.gz https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+      - tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
+      - export PATH=$PATH:/usr/local/go/bin
+      - go build $BUILD_FLAGS ./...
+      - go test $BUILD_FLAGS -cover ./...
+      - mkdir /out/linux-x64
+      - go build $BUILD_FLAGS -o /out/linux-x64/tob-cob
+      - mkdir /out/linux-x64/assets
+      - cp -r ./assets/* /out/linux-x64/assets
+
+    environment:
+      BUILD_FLAGS: -trimpath
+
+    volumes:
+      - name: out
+        path: /out
+
+  - name: deploy
+    image: ubuntu:xenial-20200212
+
+    commands:
+      - apt-get update -qq
+      - apt-get install -qy curl unzip
+      - mkdir -p ~/.config/itch
+      - echo $BUTLER_API_KEY > ~/.config/itch/butler_creds
+      - wc ~/.config/itch/butler_creds
+      - curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/15.17.0/archive/default
+      - unzip butler.zip
+      - chmod +x butler
+      - ./butler -V
+      - ./butler push /out/linux-x64 szabba/tears-of-butterflies-colors-of-blood:linux-x64
+
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+          - cron
+
+    environment:
+      BUTLER_API_KEY:
+        from_secret: BUTLER_API_KEY
+
+    volumes:
+      - name: out
+        path: /out
+
+volumes:
+  - name: out
+    temp: {}
