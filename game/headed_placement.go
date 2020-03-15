@@ -6,6 +6,8 @@ package game
 
 import (
 	"time"
+
+	"github.com/szabba/tob-cob/game/actions"
 )
 
 // A HeadedPlacement is either:
@@ -15,7 +17,7 @@ import (
 //     - moving from one point to another
 type HeadedPlacement struct {
 	pos, heading OnePosTaker
-	countdown    Countdown
+	countdown    actions.Countdown
 }
 
 // Placed says whether the placement takes up some position.
@@ -52,11 +54,11 @@ func (hp *HeadedPlacement) Place(pos Position) bool {
 
 // MoveTo creates an action that will try to move the placement to dst over a duration of dt.
 // The action gets interrupted if the dst position is taken as it starts.
-func (hp *HeadedPlacement) MoveTo(dst Position, dt time.Duration) Action {
+func (hp *HeadedPlacement) MoveTo(dst Position, dt time.Duration) actions.Action {
 	if !hp.Placed() {
-		return NoAction()
+		return actions.NoAction()
 	}
-	return Sequence(
+	return actions.Sequence(
 		TakePosition(dst, &hp.heading),
 		hp.countdown.Action(dt),
 		hp.arriveAction(dst))
@@ -71,7 +73,7 @@ func (hp *HeadedPlacement) Progress() float64 {
 	return hp.countdown.Progress()
 }
 
-func (hp *HeadedPlacement) arriveAction(dst Position) Action {
+func (hp *HeadedPlacement) arriveAction(dst Position) actions.Action {
 	return &_PlacemnetArriveAction{hp, dst}
 }
 
@@ -80,29 +82,29 @@ type _PlacemnetArriveAction struct {
 	dst       Position
 }
 
-func (action *_PlacemnetArriveAction) Run(atMost time.Duration) ActionStatus {
+func (action *_PlacemnetArriveAction) Run(atMost time.Duration) actions.Status {
 	action.placement.heading.Leave()
 	// We just made dst available - therefore Take will succeed.
 	action.dst.Take(&action.placement.pos)
-	return Done(atMost)
+	return actions.Done(atMost)
 }
 
 // FollowPath creates an action that will move the heading along the path.
 // Each step will take stepDt.
 //
 // When first run, the action fails immediately if the heading is not at the initial position of the path.
-func (hp *HeadedPlacement) FollowPath(path Path, stepDt time.Duration) Action {
-	steps := make([]Action, 0, len(path))
+func (hp *HeadedPlacement) FollowPath(path Path, stepDt time.Duration) actions.Action {
+	steps := make([]actions.Action, 0, len(path))
 	if len(path) > 0 {
 		steps = append(steps, hp.checkAt(path[0]))
 		for _, dst := range path[1:] {
 			steps = append(steps, hp.MoveTo(dst, stepDt))
 		}
 	}
-	return Sequence(steps...)
+	return actions.Sequence(steps...)
 }
 
-func (hp *HeadedPlacement) checkAt(pos Position) Action {
+func (hp *HeadedPlacement) checkAt(pos Position) actions.Action {
 	return &_PlacementCheckAtAction{hp, pos}
 }
 
@@ -111,9 +113,9 @@ type _PlacementCheckAtAction struct {
 	pos       Position
 }
 
-func (action *_PlacementCheckAtAction) Run(atMost time.Duration) ActionStatus {
+func (action *_PlacementCheckAtAction) Run(atMost time.Duration) actions.Status {
 	if action.placement.pos.pos != action.pos {
-		return Interrupted(atMost)
+		return actions.Interrupted(atMost)
 	}
-	return Done(atMost)
+	return actions.Done(atMost)
 }

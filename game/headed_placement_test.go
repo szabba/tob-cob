@@ -10,6 +10,7 @@ import (
 
 	"github.com/szabba/assert"
 	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/actions"
 )
 
 func TestZeroHeadedPlacementIsNotPlaced(t *testing.T) {
@@ -105,8 +106,8 @@ func TestHeadedPlacementCannotMoveIfNotPlaced(t *testing.T) {
 
 	// then
 	assert.That(
-		action == game.NoAction(),
-		t.Errorf, "got action %#v, want %#v", action, game.NoAction())
+		action == actions.NoAction(),
+		t.Errorf, "got action %#v, want %#v", action, actions.NoAction())
 }
 
 func TestPlacedHeadedPlacementCanMove(t *testing.T) {
@@ -128,8 +129,8 @@ func TestPlacedHeadedPlacementCanMove(t *testing.T) {
 
 	// then
 	assert.That(
-		status == game.Done(0),
-		t.Errorf, "got move status %#v - want %#v", status, game.Done(0))
+		status == actions.Done(0),
+		t.Errorf, "got move status %#v - want %#v", status, actions.Done(0))
 	assertPlaced(t, &placement, dst.AtPoint())
 	assert.That(dst.Taken(), t.Errorf, "%#v should be taken, but is not", dst.AtPoint())
 	assert.That(!pos.Taken(), t.Errorf, "%#v should not be taken, but it is", pos.AtPoint())
@@ -247,7 +248,7 @@ func TestFollowingAnEmptyPathCompletesImmediately(t *testing.T) {
 	status := action.Run(0)
 
 	// then
-	want := game.Done(0)
+	want := actions.Done(0)
 	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
 }
 
@@ -269,7 +270,7 @@ func TestFollowingASinglePositionPathCompletesImmediatelyWhenThePlacementIsAlrea
 	status := action.Run(time.Second)
 
 	// then
-	want := game.Done(time.Second)
+	want := actions.Done(time.Second)
 	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
 }
 
@@ -290,7 +291,7 @@ func TestFollowingASinglePositionPathFailsImmediatelyWhenThePlacementIsAlreadyTh
 	status := action.Run(time.Second)
 
 	// then
-	want := game.Interrupted(time.Second)
+	want := actions.Interrupted(time.Second)
 	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
 }
 
@@ -313,7 +314,7 @@ func TestFollowingASingleStepPathCompletesAtTheStepTime(t *testing.T) {
 	status := action.Run(time.Second)
 
 	// then
-	want := game.Done(0)
+	want := actions.Done(0)
 	assert.That(status == want, t.Errorf, "got status %#v, want %#v", status, want)
 }
 
@@ -362,7 +363,7 @@ func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesTheActionPaused(t *tes
 	status := action.Run(time.Second)
 
 	// then
-	want := game.Paused()
+	want := actions.Paused()
 	assert.That(status == want, t.Errorf, "got action status %#v, want %#v", status, want)
 }
 
@@ -413,7 +414,7 @@ func TestFollowingATwoStepPathForTheRequiredTimeLeavesActionDone(t *testing.T) {
 
 	// then
 	// then
-	want := game.Done(0)
+	want := actions.Done(0)
 	assert.That(status == want, t.Errorf, "got action status %#v, want %#v", status, want)
 }
 

@@ -6,6 +6,8 @@ package game
 
 import (
 	"time"
+
+	"github.com/szabba/tob-cob/game/actions"
 )
 
 // A Space where things can exist and interact.
@@ -152,7 +154,7 @@ func (*_DummyTaker) ForceOff(_ Position) {}
 
 // TakePosition builds an action that tries to immediately take the given position with the given taker.
 // If the position is taken, the action fails, interrupted.
-func TakePosition(pos Position, taker SpaceTaker) Action {
+func TakePosition(pos Position, taker SpaceTaker) actions.Action {
 	return _TakePositionAction{
 		pos:   pos,
 		taker: taker,
@@ -164,11 +166,11 @@ type _TakePositionAction struct {
 	taker SpaceTaker
 }
 
-var _ Action = _TakePositionAction{}
+var _ actions.Action = _TakePositionAction{}
 
-func (action _TakePositionAction) Run(atMost time.Duration) ActionStatus {
+func (action _TakePositionAction) Run(atMost time.Duration) actions.Status {
 	if action.pos.Take(action.taker) {
-		return Done(atMost)
+		return actions.Done(atMost)
 	}
-	return Interrupted(atMost)
+	return actions.Interrupted(atMost)
 }

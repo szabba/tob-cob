@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game
+package actions
 
 import (
 	"sync"
@@ -54,7 +54,7 @@ type _CountdownAction struct {
 	countdown *Countdown
 }
 
-func (action *_CountdownAction) Run(atMost time.Duration) ActionStatus {
+func (action *_CountdownAction) Run(atMost time.Duration) Status {
 	action.once.Do(action.init)
 	leftOver := action.countdown.CountDown(int(atMost))
 	if action.countdown.Progress() < 1 {

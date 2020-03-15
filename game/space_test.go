@@ -11,6 +11,7 @@ import (
 	"github.com/szabba/assert"
 
 	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/actions"
 )
 
 func TestPositionsFromTheSameSpaceAtTheSamePointAreEqual(t *testing.T) {
@@ -425,8 +426,8 @@ func TestActionTakingAFreePositionSucceeds(t *testing.T) {
 
 	// then
 	assert.That(
-		status == game.Done(time.Second),
-		t.Errorf, "got status %#v, want %#v", status, game.Done(time.Second))
+		status == actions.Done(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, actions.Done(time.Second))
 }
 
 func TestActionTakingAFreePositionCallsTheSpaceTaker(t *testing.T) {
@@ -472,8 +473,8 @@ func TestActionTakingATakenPositionFails(t *testing.T) {
 
 	// then
 	assert.That(
-		status == game.Interrupted(time.Second),
-		t.Errorf, "got status %#v, want %#v", status, game.Interrupted(time.Second))
+		status == actions.Interrupted(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, actions.Interrupted(time.Second))
 }
 
 func TestActionTakingATakenPositionLeavesThePositionStateAsIs(t *testing.T) {
@@ -515,8 +516,8 @@ func TestActionTakingANonExistentPositionFails(t *testing.T) {
 
 	// then
 	assert.That(
-		status == game.Interrupted(time.Second),
-		t.Errorf, "got status %#v, want %#v", status, game.Interrupted(time.Second))
+		status == actions.Interrupted(time.Second),
+		t.Errorf, "got status %#v, want %#v", status, actions.Interrupted(time.Second))
 }
 
 func TestActionTakingANonExistentPositionLeavesThePositionStateAsIs(t *testing.T) {
@@ -785,7 +786,7 @@ func TestSpaceWithThreePointsInAColumnHasMiddleOneAsMaxAfterTheTopOneIsRemoved(t
 	assert.That(space.Max() == mid, t.Errorf, "got %#v - want %#v", space.Max(), mid)
 }
 
-func setUpActionTakingPosition() (game.Action, game.Position, *RecordingSpaceTaker) {
+func setUpActionTakingPosition() (actions.Action, game.Position, *RecordingSpaceTaker) {
 	space := game.NewSpace()
 	pos := space.At(game.P(13, 25))
 
