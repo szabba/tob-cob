@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game_test
+package actions_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/szabba/assert"
-	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/actions"
 )
 
 func TestCountdown(t *testing.T) {
@@ -72,7 +72,7 @@ func TestCountdown(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			countdown := game.Countdown{}
+			countdown := actions.Countdown{}
 			countdown.ResetTarget(tt.Needed)
 
 			// when
@@ -97,7 +97,7 @@ func TestCountdownOver(t *testing.T) {
 		Needed time.Duration
 		Steps  []time.Duration
 
-		Status   game.ActionStatus
+		Status   actions.Status
 		Progress float64
 	}{
 		"Zero": {
@@ -133,7 +133,7 @@ func TestCountdownOver(t *testing.T) {
 				time.Second,
 			},
 
-			Status:   game.Done(0),
+			Status:   actions.Done(0),
 			Progress: 1,
 		},
 		"Complete/InTwoSteps": {
@@ -143,7 +143,7 @@ func TestCountdownOver(t *testing.T) {
 				time.Second,
 			},
 
-			Status:   game.Done(0),
+			Status:   actions.Done(0),
 			Progress: 1,
 		},
 
@@ -154,7 +154,7 @@ func TestCountdownOver(t *testing.T) {
 				time.Second,
 			},
 
-			Status:   game.Done(time.Second),
+			Status:   actions.Done(time.Second),
 			Progress: 1,
 		},
 		"AfterDone/WithTimeToSpare": {
@@ -163,7 +163,7 @@ func TestCountdownOver(t *testing.T) {
 				2 * time.Second,
 			},
 
-			Status:   game.Done(time.Second),
+			Status:   actions.Done(time.Second),
 			Progress: 1,
 		},
 	}
@@ -171,11 +171,11 @@ func TestCountdownOver(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			countdown := game.Countdown{}
+			countdown := actions.Countdown{}
 			action := countdown.Action(tt.Needed)
 
 			// when
-			var status game.ActionStatus
+			var status actions.Status
 			for _, dt := range tt.Steps {
 				status = action.Run(dt)
 			}

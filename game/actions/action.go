@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game
+package actions
 
 import (
 	"time"
@@ -15,54 +15,54 @@ type Action interface {
 	//
 	// The returned status says if the action has completed.
 	// It also says how much time is left after it has run.
-	Run(atMost time.Duration) ActionStatus
+	Run(atMost time.Duration) Status
 }
 
-// An ActionStatus says whether an action completed.
+// An Status says whether an action completed.
 // It also says how much time is left after running it.
-type ActionStatus struct {
+type Status struct {
 	timeLeft    time.Duration
 	done        bool
 	interrupted bool
 }
 
 // Interrupted says whether the action was interrupted.
-func (status ActionStatus) Interrupted() bool { return status.interrupted }
+func (status Status) Interrupted() bool { return status.interrupted }
 
 // HasTimeLeft says whether there is time left after running an action.
-func (status ActionStatus) HasTimeLeft() bool { return status.TimeLeft() > 0 }
+func (status Status) HasTimeLeft() bool { return status.TimeLeft() > 0 }
 
 // TimeLeft returns the time still left after running the action.
-func (status ActionStatus) TimeLeft() time.Duration { return status.timeLeft }
+func (status Status) TimeLeft() time.Duration { return status.timeLeft }
 
 // Done says whether the action has completed.
-func (status ActionStatus) Done() bool { return status.done }
+func (status Status) Done() bool { return status.done }
 
 // Interrupted creates an action status saying that the action was interrupted.
 //
 // The timeLeft should be the time the action did not use up.
 // As a special case, there will be no time left when the argument is negative.
-func Interrupted(timeLeft time.Duration) ActionStatus {
+func Interrupted(timeLeft time.Duration) Status {
 	if timeLeft < 0 {
 		timeLeft = 0
 	}
-	return ActionStatus{timeLeft: timeLeft, interrupted: true}
+	return Status{timeLeft: timeLeft, interrupted: true}
 }
 
 // Done creates an action status indicating that an action has completed.
 //
 // The timeLeft should be the time the action did not use up.
 // As a special case, there will be no time left when the argument is negative.
-func Done(timeLeft time.Duration) ActionStatus {
+func Done(timeLeft time.Duration) Status {
 	if timeLeft < 0 {
 		timeLeft = 0
 	}
-	return ActionStatus{timeLeft: timeLeft, done: true}
+	return Status{timeLeft: timeLeft, done: true}
 }
 
 // Paused creates an action status indicating that an action needs more time to complete.
-func Paused() ActionStatus {
-	return ActionStatus{}
+func Paused() Status {
+	return Status{}
 }
 
 // NoAction returns an action that completes instantly.
@@ -76,7 +76,7 @@ type _NoAction struct{}
 
 var _noAction = &_NoAction{}
 
-func (*_NoAction) Run(atMost time.Duration) ActionStatus {
+func (*_NoAction) Run(atMost time.Duration) Status {
 	return Done(atMost)
 }
 
@@ -87,57 +87,6 @@ type _Interrupt struct{}
 
 var _interrupt = &_Interrupt{}
 
-func (*_Interrupt) Run(atMost time.Duration) ActionStatus {
+func (*_Interrupt) Run(atMost time.Duration) Status {
 	return Interrupted(atMost)
-}
-
-// Wait returns an action that lasts waitTime but does nothing.
-func Wait(waitTime time.Duration) Action {
-	return &_Wait{waitTime}
-}
-
-type _Wait struct {
-	toEnd time.Duration
-}
-
-func (w *_Wait) Run(atMost time.Duration) ActionStatus {
-	if atMost < w.toEnd {
-		w.toEnd -= atMost
-		return Paused()
-	}
-	return Done(atMost - w.toEnd)
-}
-
-// Sequence creates an action that runs several steps one after another.
-func Sequence(steps ...Action) Action {
-	return &_Sequence{steps}
-}
-
-type _Sequence struct {
-	steps []Action
-}
-
-func (seq *_Sequence) Run(atMost time.Duration) ActionStatus {
-	status := Done(atMost)
-	for status.Done() && seq.hasStepsLeft() {
-		status = seq.runStep(status.TimeLeft())
-	}
-	if !seq.hasStepsLeft() {
-		return status
-	}
-	return Paused()
-}
-
-func (seq *_Sequence) hasStepsLeft() bool {
-	return len(seq.steps) > 0
-}
-
-func (seq *_Sequence) runStep(atMost time.Duration) ActionStatus {
-	status := seq.steps[0].Run(atMost)
-	if status.Interrupted() {
-		seq.steps = nil
-	} else if status.Done() {
-		seq.steps = seq.steps[1:]
-	}
-	return status
 }
