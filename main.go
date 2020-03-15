@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/actions"
 	"github.com/szabba/tob-cob/ui"
 )
 
@@ -83,7 +84,7 @@ func run() {
 
 	placements := make([]game.HeadedPlacement, 2)
 	placements[0].Place(space.At(game.P(1, 1)))
-	actions := []game.Action{game.NoAction(), game.NoAction()}
+	actions := []actions.Action{actions.NoAction(), actions.NoAction()}
 
 	w, err := pixelgl.NewWindow(wcfg)
 	if err != nil {
@@ -134,15 +135,15 @@ func run() {
 	}
 }
 
-func runFor(action game.Action, dt time.Duration) game.Action {
+func runFor(action actions.Action, dt time.Duration) actions.Action {
 	if action == nil {
-		return game.NoAction()
+		return actions.NoAction()
 	}
 
 	status := action.Run(dt)
 
 	if status.Done() || status.Interrupted() {
-		return game.NoAction()
+		return actions.NoAction()
 	}
 	return action
 }
