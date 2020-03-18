@@ -53,8 +53,8 @@ func run() {
 	}
 
 	grid := ui.Grid{
-		CellWidth:  50,
-		CellHeight: 30,
+		CellWidth:  20,
+		CellHeight: 20,
 		Dx:         5,
 		Dy:         5,
 	}
