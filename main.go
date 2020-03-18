@@ -112,7 +112,7 @@ func run() {
 			dst := space.At(game.P(1, 1))
 			placements[0].Place(src)
 			path, _ := game.NewPathFinder(space).FindPath(src, dst)
-			actions[0] = placements[0].FollowPath(path, time.Second/2)
+			actions[0] = placements[0].FollowPath(path, time.Second/4)
 		}
 
 		camCont.Process(w)
