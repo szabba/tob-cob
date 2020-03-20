@@ -93,7 +93,8 @@ func run() {
 	}
 	defer w.Destroy()
 	w.SetCursorVisible(false)
-	w.SetSmooth(true)
+	w.SetSmooth(false)
+	w.SetVSync(true)
 
 	const dt = time.Second / 60
 
