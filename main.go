@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	_ "image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -54,10 +55,8 @@ func run() {
 	}
 
 	grid := ui.Grid{
-		CellWidth:  20,
-		CellHeight: 20,
-		Dx:         5,
-		Dy:         5,
+		CellWidth:  30,
+		CellHeight: 30,
 	}
 
 	cam := ui.NewCamera(pixel.V(50, 0))
@@ -82,9 +81,10 @@ func run() {
 	}
 
 	outline := ui.GridOutline{
-		Space: space,
-		Grid:  grid,
-		Color: Gray,
+		Space:   space,
+		Grid:    grid,
+		Color:   Gray,
+		Margins: ui.Margins{X: 2.5, Y: 2.5},
 	}
 
 	placements := make([]game.HeadedPlacement, 2)
@@ -114,6 +114,17 @@ func run() {
 		}
 
 		if w.JustPressed(pixelgl.MouseButtonLeft) {
+			mouseAt := w.MousePosition()
+			gridPos := grid.UnderCursor(w, cam)
+			log.Info().
+				Float64("screen.mouse.x", mouseAt.X).
+				Float64("screen.mouse.y", mouseAt.Y).
+				Int("grid.mouse.x", gridPos.Column).
+				Int("grid.mouse.y", gridPos.Row).
+				Msg("clicked")
+		}
+
+		if w.JustPressed(pixelgl.MouseButtonLeft) {
 			src := space.At(game.P(3, 0))
 			dst := space.At(game.P(1, 1))
 			placements[0].Place(src)
@@ -128,7 +139,7 @@ func run() {
 		w.SetMatrix(cam.Matrix(w.Bounds()))
 		outline.Draw(w)
 		for _, placement := range placements {
-			humanoidSprite.Transform(placementTransform(grid, placement)).Draw(w)
+			humanoidSprite.Transform(placementTransform(outline, placement)).Draw(w)
 		}
 
 		w.SetMatrix(pixel.IM)
@@ -154,12 +165,14 @@ func runFor(action actions.Action, dt time.Duration) actions.Action {
 	return action
 }
 
-func placementTransform(grid ui.Grid, placement game.HeadedPlacement) pixel.Matrix {
+func placementTransform(outline ui.GridOutline, placement game.HeadedPlacement) pixel.Matrix {
 	src := placement.AtPoint()
-	mat := grid.Matrix(src.Column, src.Row)
+	grid := outline.Grid
+	bottom := pixel.V(0, -grid.CellHeight/2+math.Abs(outline.Margins.Y))
+	mat := grid.Matrix(src.Column, src.Row).Moved(bottom)
 	if placement.Headed() {
 		dst := placement.Heading()
-		dstMatrix := grid.Matrix(dst.Column, dst.Row)
+		dstMatrix := grid.Matrix(dst.Column, dst.Row).Moved(bottom)
 		prog := placement.Progress()
 		for i := range mat {
 			mat[i] = dstMatrix[i]*prog + mat[i]*(1-prog)

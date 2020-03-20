@@ -5,6 +5,8 @@
 package ui
 
 import (
+	"math"
+
 	"github.com/faiface/pixel"
 
 	"github.com/szabba/tob-cob/game"
@@ -13,36 +15,29 @@ import (
 type Grid struct {
 	CellWidth  float64
 	CellHeight float64
-	Dx, Dy     float64
 }
 
 func (grid Grid) Matrix(col, row int) pixel.Matrix {
 	x, y := float64(col), float64(row)
-	dx := grid.CellWidth*x + grid.Dx*x
-	dy := grid.CellHeight*y + grid.Dy*y
+	dx := grid.CellWidth * x
+	dy := grid.CellHeight * y
 	dr := pixel.V(dx, dy)
 	return pixel.IM.Moved(dr)
 }
 
-func (grid Grid) Cell(col, row int) Cell {
-	return Cell{col, row, grid}
+func (grid Grid) UnderCursor(input Input, cam Camera) game.Point {
+	onScreen := input.MousePosition()
+	inWorld := cam.Matrix(input.Bounds()).Unproject(onScreen)
+	column := grid.underCursor(inWorld.X, grid.CellWidth)
+	row := grid.underCursor(inWorld.Y, grid.CellWidth)
+	return game.P(row, column)
 }
 
-type GridOutline struct {
-	Space *game.Space
-	Grid  Grid
-	Color pixel.RGBA
-}
-
-func (o GridOutline) Draw(dst pixel.Target) {
-	min, max := o.Space.Min(), o.Space.Max()
-	var pt game.Point
-	for pt.Row = min.Row; pt.Row <= max.Row; pt.Row++ {
-		for pt.Column = min.Column; pt.Column <= max.Column; pt.Column++ {
-			if !o.Space.At(pt).Exists() {
-				continue
-			}
-			o.Grid.Cell(pt.Column, pt.Row).Draw(dst, o.Color)
-		}
+func (grid Grid) underCursor(cursor, dim float64) int {
+	if cursor < 0 {
+		return -grid.underCursor(-cursor, dim)
 	}
+
+	cell := math.Floor((cursor + dim/2) / dim)
+	return int(cell)
 }
