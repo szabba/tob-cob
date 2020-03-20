@@ -18,13 +18,13 @@ func (cell Cell) Matrix() pixel.Matrix {
 	return cell.Grid.Matrix(cell.Col, cell.Row)
 }
 
-func (cell Cell) Draw(dst pixel.Target) {
+func (cell Cell) Draw(dst pixel.Target, color pixel.RGBA) {
 	imd := imdraw.New(nil)
 	imd.SetMatrix(cell.Matrix())
 	wHalf := float64(cell.Grid.CellWidth) / 2
+	imd.Color = color
 	imd.Push(pixel.V(-wHalf, 0), pixel.V(wHalf, cell.Grid.CellHeight))
 
-	imd.Color = pixel.RGB(1, 1, 1)
 	imd.Rectangle(1)
 
 	imd.Draw(dst)

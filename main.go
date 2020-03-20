@@ -30,6 +30,7 @@ var (
 	Black = pixel.RGB(0, 0, 0)
 	White = pixel.RGB(1, 1, 1)
 	Red   = pixel.RGB(1, 0, 0)
+	Gray  = pixel.RGB(.5, .5, .5)
 )
 
 func run() {
@@ -80,7 +81,11 @@ func run() {
 		}
 	}
 
-	outline := ui.GridOutline{Space: space, Grid: grid}
+	outline := ui.GridOutline{
+		Space: space,
+		Grid:  grid,
+		Color: Gray,
+	}
 
 	placements := make([]game.HeadedPlacement, 2)
 	placements[0].Place(space.At(game.P(1, 1)))

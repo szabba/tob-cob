@@ -31,6 +31,7 @@ func (grid Grid) Cell(col, row int) Cell {
 type GridOutline struct {
 	Space *game.Space
 	Grid  Grid
+	Color pixel.RGBA
 }
 
 func (o GridOutline) Draw(dst pixel.Target) {
@@ -41,7 +42,7 @@ func (o GridOutline) Draw(dst pixel.Target) {
 			if !o.Space.At(pt).Exists() {
 				continue
 			}
-			o.Grid.Cell(pt.Column, pt.Row).Draw(dst)
+			o.Grid.Cell(pt.Column, pt.Row).Draw(dst, o.Color)
 		}
 	}
 }
