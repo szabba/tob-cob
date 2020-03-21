@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"sort"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -100,4 +101,42 @@ func (out Outline) Draw(dst pixel.Target) {
 	imd.Rectangle(1)
 	imd.Draw(dst)
 
+}
+
+// An OrderedSpriteGroup keeps track of a bunch of sprites and knows how to draw in the correct order.
+// This assumes all the sprites are anchored at their bottom.
+type OrderedSpriteGroup struct {
+	order []Sprite
+}
+
+// Add sprites to draw.
+// You need to add the sprites before each Draw call.
+func (group *OrderedSpriteGroup) Add(sprites ...Sprite) {
+	group.order = append(group.order, sprites...)
+}
+
+// Draw the added sprites.
+// The set of sprites to draw and their order is forgotten afterwards.
+func (group *OrderedSpriteGroup) Draw(dst pixel.Target) {
+	defer group.empty()
+	group.sort()
+	for _, sprite := range group.order {
+		sprite.Draw(dst)
+	}
+}
+
+func (group *OrderedSpriteGroup) empty() {
+	group.order = group.order[:0]
+}
+
+func (group *OrderedSpriteGroup) sort() {
+	sort.SliceStable(group.order, func(i, j int) bool {
+		first, second := group.order[i], group.order[j]
+		return group.yOf(first) >= group.yOf(second)
+	})
+}
+
+func (OrderedSpriteGroup) yOf(sprite Sprite) float64 {
+	origin := pixel.V(0, 0)
+	return sprite.transform.Project(origin).Y
 }
