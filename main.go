@@ -103,6 +103,8 @@ func run() {
 
 	const dt = time.Second / 60
 
+	spriteGroup := ui.OrderedSpriteGroup{}
+
 	for !w.Closed() {
 		w.Update()
 		if w.JustReleased(pixelgl.KeyF) {
@@ -138,9 +140,13 @@ func run() {
 
 		w.SetMatrix(cam.Matrix(w.Bounds()))
 		outline.Draw(w)
+
 		for _, placement := range placements {
-			humanoidSprite.Transform(placementTransform(outline, placement)).Draw(w)
+			matrix := placementTransform(outline, placement)
+			sprite := humanoidSprite.Transform(matrix)
+			spriteGroup.Add(sprite)
 		}
+		spriteGroup.Draw(w)
 
 		w.SetMatrix(pixel.IM)
 		cursorSprite.Transform(pixel.IM.Moved(w.MousePosition())).Draw(w.Canvas())
