@@ -150,6 +150,35 @@ func TestPathIsFoundBetweenConnectedPoints(t *testing.T) {
 	assertPathFromTo(t.Errorf, path, game.P(3, 4), game.P(4, 5))
 }
 
+func TestFoundPathAvoidsTakenPositions(t *testing.T) {
+	// given
+	space := game.NewSpace()
+	for y := 0; y < 2; y++ {
+		for x := 0; x < 3; x++ {
+			space.At(game.P(y, x)).Create()
+		}
+	}
+	taker := game.OnePosTaker{}
+	taken := space.At(game.P(0, 1))
+	taken.Take(&taker)
+
+	finder := game.NewPathFinder(space)
+
+	src := space.At(game.P(0, 0))
+	dst := space.At(game.P(0, 2))
+
+	// when
+	path, ok := finder.FindPath(src, dst)
+
+	// then
+	assert.That(ok, t.Errorf, "path search failed")
+	assert.That(finder.IsViable(path), t.Errorf, "found unviable path %#v", path)
+	assertPathFromTo(t.Errorf, path, src.AtPoint(), dst.AtPoint())
+	for i, pos := range path {
+		assert.That(pos != taken, t.Errorf, "at index %d: path includes taken position %#v", i, taken)
+	}
+}
+
 func assertPathFromTo(onErr assert.ErrorFunc, path game.Path, from, to game.Point) {
 	if len(path) == 0 {
 		onErr("path is empty")

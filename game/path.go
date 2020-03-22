@@ -89,16 +89,16 @@ func (g *_PathFinderGraph) Neighbours(node astar.Node) []astar.Node {
 	pt := node.(Position).AtPoint()
 
 	ns := g.neighbourBuf[:0]
-	ns = g.appendExisting(ns, P(pt.Row, pt.Column+1))
-	ns = g.appendExisting(ns, P(pt.Row+1, pt.Column))
-	ns = g.appendExisting(ns, P(pt.Row, pt.Column-1))
-	ns = g.appendExisting(ns, P(pt.Row-1, pt.Column))
+	ns = g.appendViable(ns, P(pt.Row, pt.Column+1))
+	ns = g.appendViable(ns, P(pt.Row+1, pt.Column))
+	ns = g.appendViable(ns, P(pt.Row, pt.Column-1))
+	ns = g.appendViable(ns, P(pt.Row-1, pt.Column))
 	return ns
 }
 
-func (g *_PathFinderGraph) appendExisting(ns []astar.Node, pt Point) []astar.Node {
+func (g *_PathFinderGraph) appendViable(ns []astar.Node, pt Point) []astar.Node {
 	pos := g.space.At(pt)
-	if !pos.Exists() {
+	if !pos.Exists() || pos.Taken() {
 		return ns
 	}
 	return append(ns, pos)

@@ -89,6 +89,7 @@ func run() {
 
 	placements := make([]game.HeadedPlacement, 2)
 	placements[0].Place(space.At(game.P(1, 1)))
+	placements[1].Place(space.At(game.P(0, 0)))
 	actions := []actions.Action{actions.NoAction(), actions.NoAction()}
 
 	w, err := pixelgl.NewWindow(wcfg)
@@ -131,7 +132,8 @@ func run() {
 			dst := space.At(grid.UnderCursor(w, cam))
 			placements[0].Place(src)
 			path, _ := game.NewPathFinder(space).FindPath(src, dst)
-			actions[0] = placements[0].FollowPath(path, time.Second/4)
+			log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
+			actions[0] = placements[0].FollowPath(path, time.Second/8)
 		}
 
 		camCont.Process(w)
