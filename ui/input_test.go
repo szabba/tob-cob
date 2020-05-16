@@ -13,8 +13,9 @@ import (
 
 type TestInput struct {
 	Mock struct {
-		Bounds        func() pixel.Rect
-		MousePosition func() pixel.Vec
+		Bounds            func() pixel.Rect
+		MousePosition     func() pixel.Vec
+		MouseInsideWindow func() bool
 	}
 }
 
@@ -29,6 +30,13 @@ func (input TestInput) Bounds() pixel.Rect {
 		return pixel.R(0, 0, 0, 0)
 	}
 	return input.Mock.Bounds()
+}
+
+func (input TestInput) MouseInsideWindow() bool {
+	if input.Mock.MouseInsideWindow == nil {
+		return false
+	}
+	return input.Mock.MouseInsideWindow()
 }
 
 func (input TestInput) MousePosition() pixel.Vec {

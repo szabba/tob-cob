@@ -13,6 +13,7 @@ type Input interface {
 	Focused() bool
 	Pressed(btn pixelgl.Button) bool
 	MousePosition() pixel.Vec
+	MouseInsideWindow() bool
 	Bounds() pixel.Rect
 }
 

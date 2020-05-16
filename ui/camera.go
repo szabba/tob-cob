@@ -58,6 +58,10 @@ func (cont *CameraController) Process(input Input) {
 }
 
 func (cont *CameraController) lookAtDelta(input Input) pixel.Vec {
+	if !input.MouseInsideWindow() {
+		return pixel.ZV
+	}
+
 	delta := pixel.ZV
 	if input.Pressed(pixelgl.KeyLeft) || cont.mouseNearLeftEdge(input) {
 		delta.X -= 5
