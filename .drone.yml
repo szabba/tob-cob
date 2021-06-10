@@ -37,12 +37,12 @@ steps:
       - ./butler -V
       - ./butler push ./out/linux-x64 szabba/tears-of-butterflies-colors-of-blood:linux-x64
 
-    # when:
-    #   branch:
-    #     - trunk
-    #   event:
-    #     exclude:
-    #       - cron
+    when:
+      branch:
+        - trunk
+      event:
+        exclude:
+          - cron
 
     environment:
       BUTLER_API_KEY:
