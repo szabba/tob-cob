@@ -1,8 +1,8 @@
 # Tears of Butterflies: Colors of Blood
 
-[![Build Status](https://cloud.drone.io/api/badges/szabba/tob-cob/status.svg)](https://cloud.drone.io/szabba/tob-cob)
+[![Build status](https://cloud.drone.io/api/badges/szabba/tob-cob/status.svg)](https://cloud.drone.io/szabba/tob-cob)
 
-[![](https://img.shields.io/badge/Itch.io-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://szabba.itch.io/tears-of-butterflies-colors-of-blood)
+[![Itch.io page](https://img.shields.io/badge/Itch.io-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://szabba.itch.io/tears-of-butterflies-colors-of-blood)
 
 ## Build
 
