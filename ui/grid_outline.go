@@ -8,9 +8,10 @@ import (
 	"math"
 
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
 
 	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/ui/draw"
+	"github.com/szabba/tob-cob/ui/geometry"
 )
 
 type GridOutline struct {
@@ -22,7 +23,7 @@ type GridOutline struct {
 
 type Margins struct{ X, Y float64 }
 
-func (o GridOutline) Draw(dst pixel.Target) {
+func (o GridOutline) Draw(dst draw.Target) {
 	min, max := o.Space.Min(), o.Space.Max()
 	var pt game.Point
 	for pt.Row = min.Row; pt.Row <= max.Row; pt.Row++ {
@@ -35,23 +36,16 @@ func (o GridOutline) Draw(dst pixel.Target) {
 	}
 }
 
-func (o GridOutline) drawCell(dst pixel.Target, pt game.Point) {
+func (o GridOutline) drawCell(dst draw.Target, pt game.Point) {
 	matrix := o.cellMatrix(pt)
 
 	halfWidth := o.Grid.CellWidth/2 - math.Abs(o.Margins.X)
 	halfHeight := o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)
 
-	lowerLeft := pixel.V(-halfWidth, -halfHeight)
-	upperRight := pixel.V(halfWidth, halfHeight)
-
-	imd := imdraw.New(nil)
-	imd.SetMatrix(matrix)
-	imd.Color = o.Color
-	imd.Push(lowerLeft, upperRight)
-	imd.Rectangle(1)
-	imd.Draw(dst)
+	r := geometry.R(-halfWidth, -halfHeight, halfWidth, halfHeight)
+	dst.Rectangle(r, matrix, o.Color)
 }
 
-func (o GridOutline) cellMatrix(pt game.Point) pixel.Matrix {
+func (o GridOutline) cellMatrix(pt game.Point) geometry.Mat {
 	return o.Grid.Matrix(pt.Column, pt.Row)
 }

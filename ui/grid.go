@@ -7,9 +7,9 @@ package ui
 import (
 	"math"
 
-	"github.com/faiface/pixel"
-
 	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/ui/geometry"
+	"github.com/szabba/tob-cob/ui/input"
 )
 
 type Grid struct {
@@ -17,17 +17,18 @@ type Grid struct {
 	CellHeight float64
 }
 
-func (grid Grid) Matrix(col, row int) pixel.Matrix {
+func (grid Grid) Matrix(col, row int) geometry.Mat {
 	x, y := float64(col), float64(row)
 	dx := grid.CellWidth * x
 	dy := grid.CellHeight * y
-	dr := pixel.V(dx, dy)
-	return pixel.IM.Moved(dr)
+	dr := geometry.V(dx, dy)
+	return geometry.Translation(dr)
 }
 
-func (grid Grid) UnderCursor(input Input, cam Camera) game.Point {
-	onScreen := input.MousePosition()
-	inWorld := cam.Matrix(input.Bounds()).Unproject(onScreen)
+func (grid Grid) UnderCursor(src input.Source, cam Camera) game.Point {
+	onScreen := src.MousePosition()
+	toWorld := cam.Matrix(src.Bounds()).Invert()
+	inWorld := toWorld.Apply(onScreen)
 	column := grid.underCursor(inWorld.X, grid.CellWidth)
 	row := grid.underCursor(inWorld.Y, grid.CellWidth)
 	return game.P(row, column)

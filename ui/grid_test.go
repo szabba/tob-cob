@@ -7,10 +7,11 @@ package ui_test
 import (
 	"testing"
 
-	"github.com/faiface/pixel"
 	"github.com/szabba/assert"
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/ui"
+	"github.com/szabba/tob-cob/ui/geometry"
+	"github.com/szabba/tob-cob/ui/input/testinput"
 )
 
 func TestGridMatrix(t *testing.T) {
@@ -18,43 +19,43 @@ func TestGridMatrix(t *testing.T) {
 	tests := map[string]struct {
 		Column, Row int
 
-		RelativeToCell  pixel.Vec
-		RelativeToWorld pixel.Vec
+		RelativeToCell  geometry.Vec
+		RelativeToWorld geometry.Vec
 	}{
 		"MiddleOfOriginCell": {},
 
 		"TopEdgeOfOriginCell": {
-			RelativeToCell:  pixel.V(0, grid.CellHeight/2),
-			RelativeToWorld: pixel.V(0, grid.CellHeight/2),
+			RelativeToCell:  geometry.V(0, grid.CellHeight/2),
+			RelativeToWorld: geometry.V(0, grid.CellHeight/2),
 		},
 		"BottomEdgeOfOriginCell": {
-			RelativeToCell:  pixel.V(0, -grid.CellHeight/2),
-			RelativeToWorld: pixel.V(0, -grid.CellHeight/2),
+			RelativeToCell:  geometry.V(0, -grid.CellHeight/2),
+			RelativeToWorld: geometry.V(0, -grid.CellHeight/2),
 		},
 		"LeftEdgeOfOriginCell": {
-			RelativeToCell:  pixel.V(-grid.CellWidth/2, 0),
-			RelativeToWorld: pixel.V(-grid.CellWidth/2, 0),
+			RelativeToCell:  geometry.V(-grid.CellWidth/2, 0),
+			RelativeToWorld: geometry.V(-grid.CellWidth/2, 0),
 		},
 		"RightEdgeOfOriginCell": {
-			RelativeToCell:  pixel.V(grid.CellWidth/2, 0),
-			RelativeToWorld: pixel.V(grid.CellWidth/2, 0),
+			RelativeToCell:  geometry.V(grid.CellWidth/2, 0),
+			RelativeToWorld: geometry.V(grid.CellWidth/2, 0),
 		},
 
 		"MiddleOfCellAboveOrigin": {
 			Row:             1,
-			RelativeToWorld: pixel.V(0, grid.CellHeight),
+			RelativeToWorld: geometry.V(0, grid.CellHeight),
 		},
 		"MiddleOfCellBelowOrigin": {
 			Row:             -1,
-			RelativeToWorld: pixel.V(0, -grid.CellHeight),
+			RelativeToWorld: geometry.V(0, -grid.CellHeight),
 		},
 		"MiddleOfCellRightOfOrigin": {
 			Column:          1,
-			RelativeToWorld: pixel.V(grid.CellWidth, 0),
+			RelativeToWorld: geometry.V(grid.CellWidth, 0),
 		},
 		"MiddleOfCellLeftOfOrigin": {
 			Column:          -1,
-			RelativeToWorld: pixel.V(-grid.CellWidth, 0),
+			RelativeToWorld: geometry.V(-grid.CellWidth, 0),
 		},
 	}
 
@@ -66,7 +67,7 @@ func TestGridMatrix(t *testing.T) {
 			matrix := grid.Matrix(tt.Column, tt.Row)
 
 			// then
-			relativeToWorld := matrix.Project(tt.RelativeToCell)
+			relativeToWorld := matrix.Apply(tt.RelativeToCell)
 			assert.That(
 				relativeToWorld == tt.RelativeToWorld,
 				t.Errorf, "got %#v world-coordinate, want %#v", relativeToWorld, tt.RelativeToWorld)
@@ -77,70 +78,70 @@ func TestGridMatrix(t *testing.T) {
 func TestGridUnderCursor(t *testing.T) {
 	grid := ui.Grid{CellWidth: 20, CellHeight: 10}
 	tests := map[string]struct {
-		LookingAt pixel.Vec
-		MouseAt   func() pixel.Vec
+		LookingAt geometry.Vec
+		MouseAt   func() geometry.Vec
 
 		Cell game.Point
 	}{
 		"AtOrigin": {},
 
 		"AtLeftEdgeOfOriginCell": {
-			MouseAt: func() pixel.Vec { return pixel.V(-grid.CellHeight/2, 0) },
+			MouseAt: func() geometry.Vec { return geometry.V(-grid.CellHeight/2, 0) },
 		},
 		"AtRightEdgeOfOriginCell": {
-			MouseAt: func() pixel.Vec { return pixel.V(grid.CellHeight/2, 0) },
+			MouseAt: func() geometry.Vec { return geometry.V(grid.CellHeight/2, 0) },
 		},
 		"AtTopEdgeOfOriginCell": {
-			MouseAt: func() pixel.Vec { return pixel.V(0, grid.CellHeight/2) },
+			MouseAt: func() geometry.Vec { return geometry.V(0, grid.CellHeight/2) },
 		},
 		"AtBottomEdgeOfOriginCell": {
-			MouseAt: func() pixel.Vec { return pixel.V(0, -grid.CellHeight/2) },
+			MouseAt: func() geometry.Vec { return geometry.V(0, -grid.CellHeight/2) },
 		},
 
 		"AtMiddleOfCellRightOfOrigin": {
-			MouseAt: func() pixel.Vec { return pixel.V(grid.CellWidth, 0) },
+			MouseAt: func() geometry.Vec { return geometry.V(grid.CellWidth, 0) },
 			Cell:    game.P(0, 1),
 		},
 		"AtMiddleOfCellLeftOfOrigin": {
-			MouseAt: func() pixel.Vec { return pixel.V(-grid.CellWidth, 0) },
+			MouseAt: func() geometry.Vec { return geometry.V(-grid.CellWidth, 0) },
 			Cell:    game.P(0, -1),
 		},
 		"AtMiddleOfCellAboveOrigin": {
-			MouseAt: func() pixel.Vec { return pixel.V(0, grid.CellHeight) },
+			MouseAt: func() geometry.Vec { return geometry.V(0, grid.CellHeight) },
 			Cell:    game.P(1, 0),
 		},
 		"AtMiddleOfCellBellowOrigin": {
-			MouseAt: func() pixel.Vec { return pixel.V(0, -grid.CellHeight) },
+			MouseAt: func() geometry.Vec { return geometry.V(0, -grid.CellHeight) },
 			Cell:    game.P(-1, 0),
 		},
 
 		"LookingAtLeftEdgeOfOriginCell": {
-			LookingAt: pixel.V(-grid.CellHeight/2, 0),
+			LookingAt: geometry.V(-grid.CellHeight/2, 0),
 		},
 		"LookingAtRightEdgeOfOriginCell": {
-			LookingAt: pixel.V(grid.CellHeight/2, 0),
+			LookingAt: geometry.V(grid.CellHeight/2, 0),
 		},
 		"LookingAtTopEdgeOfOriginCell": {
-			LookingAt: pixel.V(0, grid.CellHeight/2),
+			LookingAt: geometry.V(0, grid.CellHeight/2),
 		},
 		"LookingAtBottomEdgeOfOriginCell": {
-			LookingAt: pixel.V(0, -grid.CellHeight/2),
+			LookingAt: geometry.V(0, -grid.CellHeight/2),
 		},
 
 		"LookingAtMiddleOfCellRightOfOrigin": {
-			LookingAt: pixel.V(grid.CellWidth, 0),
+			LookingAt: geometry.V(grid.CellWidth, 0),
 			Cell:      game.P(0, 1),
 		},
 		"LookingAtMiddleOfCellLeftOfOrigin": {
-			LookingAt: pixel.V(-grid.CellWidth, 0),
+			LookingAt: geometry.V(-grid.CellWidth, 0),
 			Cell:      game.P(0, -1),
 		},
 		"LookingAtMiddleOfCellAboveOrigin": {
-			LookingAt: pixel.V(0, grid.CellHeight),
+			LookingAt: geometry.V(0, grid.CellHeight),
 			Cell:      game.P(1, 0),
 		},
 		"LookingAtMiddleOfCellBellowOrigin": {
-			LookingAt: pixel.V(0, -grid.CellHeight),
+			LookingAt: geometry.V(0, -grid.CellHeight),
 			Cell:      game.P(-1, 0),
 		},
 	}
@@ -148,7 +149,7 @@ func TestGridUnderCursor(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// given
-			input := TestInput{}
+			input := testinput.Source{}
 			input.Mock.MousePosition = tt.MouseAt
 
 			cam := ui.NewCamera(tt.LookingAt)

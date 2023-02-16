@@ -21,6 +21,9 @@ import (
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
 	"github.com/szabba/tob-cob/ui"
+	"github.com/szabba/tob-cob/ui/draw/pixelgldraw"
+	"github.com/szabba/tob-cob/ui/geometry"
+	"github.com/szabba/tob-cob/ui/input/pixelglinput"
 )
 
 func main() {
@@ -59,7 +62,7 @@ func run() {
 		CellHeight: 30,
 	}
 
-	cam := ui.NewCamera(pixel.V(50, 0))
+	cam := ui.NewCamera(geometry.V(50, 0))
 	camCont := ui.NewCamController(&cam)
 
 	humanoidSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/humanoid.png"), ui.AnchorSouth())
@@ -102,6 +105,9 @@ func run() {
 	w.SetSmooth(false)
 	w.SetVSync(true)
 
+	inSrc := pixelglinput.New(w)
+	drawTgt := pixelgldraw.New(w)
+
 	const dt = time.Second / 60
 
 	spriteGroup := ui.OrderedSpriteGroup{}
@@ -118,7 +124,7 @@ func run() {
 
 		if w.JustPressed(pixelgl.MouseButtonLeft) {
 			mouseAt := w.MousePosition()
-			gridPos := grid.UnderCursor(w, cam)
+			gridPos := grid.UnderCursor(inSrc, cam)
 			log.Info().
 				Float64("screen.mouse.x", mouseAt.X).
 				Float64("screen.mouse.y", mouseAt.Y).
@@ -129,23 +135,28 @@ func run() {
 
 		if w.JustPressed(pixelgl.MouseButtonLeft) && !placements[0].Headed() {
 			src := space.At(placements[0].AtPoint())
-			dst := space.At(grid.UnderCursor(w, cam))
+			dst := space.At(grid.UnderCursor(inSrc, cam))
 			placements[0].Place(src)
 			path, _ := game.NewPathFinder(space).FindPath(src, dst)
 			log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
 			actions[0] = placements[0].FollowPath(path, time.Second/8)
 		}
 
-		camCont.Process(w)
+		camCont.Process(inSrc)
 
 		w.Clear(Black)
 
-		w.SetMatrix(cam.Matrix(w.Bounds()))
-		outline.Draw(w)
+		drawTgt.SetMatrix(cam.Matrix(inSrc.Bounds()))
+		outline.Draw(drawTgt)
 
 		for _, placement := range placements {
 			matrix := placementTransform(outline, placement)
-			sprite := humanoidSprite.Transform(matrix)
+			sprite := humanoidSprite.Transform(
+				// TODO: redesign the sprite API more closely
+				pixel.Matrix{
+					matrix[0][0], matrix[1][0], matrix[0][1], matrix[1][1], matrix[0][2], matrix[1][2],
+				},
+			)
 			spriteGroup.Add(sprite)
 		}
 		spriteGroup.Draw(w)
@@ -173,17 +184,20 @@ func runFor(action actions.Action, dt time.Duration) actions.Action {
 	return action
 }
 
-func placementTransform(outline ui.GridOutline, placement game.HeadedPlacement) pixel.Matrix {
+func placementTransform(outline ui.GridOutline, placement game.HeadedPlacement) geometry.Mat {
 	src := placement.AtPoint()
 	grid := outline.Grid
-	bottom := pixel.V(0, -grid.CellHeight/2+math.Abs(outline.Margins.Y))
-	mat := grid.Matrix(src.Column, src.Row).Moved(bottom)
+	bottom := geometry.V(0, -grid.CellHeight/2+math.Abs(outline.Margins.Y))
+	mat := grid.Matrix(src.Column, src.Row).Compose(geometry.Translation((bottom)))
 	if placement.Headed() {
 		dst := placement.Heading()
-		dstMatrix := grid.Matrix(dst.Column, dst.Row).Moved(bottom)
+		dstMatrix := grid.Matrix(dst.Column, dst.Row).Compose(geometry.Translation(bottom))
 		prog := placement.Progress()
-		for i := range mat {
-			mat[i] = dstMatrix[i]*prog + mat[i]*(1-prog)
+		// TODO: factor out mixing function?
+		for i := range [...]int{0, 1} {
+			for j := range [...]int{0, 1, 2} {
+				mat[i][j] = dstMatrix[i][j]*prog + mat[i][j]*(1-prog)
+			}
 		}
 	}
 	return mat

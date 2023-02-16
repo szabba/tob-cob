@@ -7,22 +7,22 @@ package ui_test
 import (
 	"testing"
 
-	"github.com/faiface/pixel"
 	"github.com/szabba/assert"
 
 	"github.com/szabba/tob-cob/ui"
+	"github.com/szabba/tob-cob/ui/geometry"
 )
 
 func TestZeroCameraCentersTheOrigin(t *testing.T) {
 	// given
-	bounds := pixel.R(0, 0, 800, 600)
+	bounds := geometry.R(0, 0, 800, 600)
 	center := bounds.Center()
 
 	// when
 	cam := ui.Camera{}
 
 	// then
-	originAt := cam.Matrix(bounds).Project(pixel.ZV)
+	originAt := cam.Matrix(bounds).Apply(geometry.Vec{})
 	assert.That(
 		originAt == center,
 		t.Errorf, "origin at %s, want it at %s", originAt, center)
@@ -30,15 +30,15 @@ func TestZeroCameraCentersTheOrigin(t *testing.T) {
 
 func TestCameraCentersTheLookAtPoint(t *testing.T) {
 	// given
-	bounds := pixel.R(0, 0, 800, 600)
+	bounds := geometry.R(0, 0, 800, 600)
 	center := bounds.Center()
-	lookAt := pixel.V(300, 200)
+	lookAt := geometry.V(300, 200)
 
 	// when
 	cam := ui.NewCamera(lookAt)
 
 	// then
-	onscreen := cam.Matrix(bounds).Project(lookAt)
+	onscreen := cam.Matrix(bounds).Apply(lookAt)
 	assert.That(
 		onscreen == center,
 		t.Errorf, "origin at %s, want it at %s", onscreen, center)
@@ -46,17 +46,17 @@ func TestCameraCentersTheLookAtPoint(t *testing.T) {
 
 func TestCameraMoveByShiftsThePointBeingLookedAt(t *testing.T) {
 	// given
-	bounds := pixel.R(0, 0, 800, 600)
+	bounds := geometry.R(0, 0, 800, 600)
 	center := bounds.Center()
-	lookAt := pixel.V(300, 200)
-	shift := pixel.V(100, 50)
+	lookAt := geometry.V(300, 200)
+	shift := geometry.V(100, 50)
 	cam := ui.NewCamera(lookAt)
 
 	// when
 	cam.MoveBy(shift)
 
 	// then
-	onscreen := cam.Matrix(bounds).Project(lookAt.Add(shift))
+	onscreen := cam.Matrix(bounds).Apply(lookAt.Add(shift))
 	assert.That(
 		onscreen == center,
 		t.Errorf, "origin at %s, want it at %s", onscreen, center)
