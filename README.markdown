@@ -24,3 +24,16 @@ Prerequisites:
 Prerequisites:
 
 - steam-run
+
+## Build with deployment
+
+```bash
+echo "BUTLER_API_KEY=xxx" > SECRETS # Use actual key instead.
+drone exec --secret-file SECRETS
+```
+
+Prerequisites:
+
+- drone CLI
+- docker
+- itch.io API key
