@@ -5,11 +5,14 @@
 package pixelgldraw
 
 import (
+	"fmt"
+	"image"
 	"image/color"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/rs/zerolog/log"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
 )
@@ -44,6 +47,37 @@ func (t Target) Rectangle(r geometry.Rect, m geometry.Mat, fill color.Color) {
 
 	imd.Rectangle(1)
 	imd.Draw(t.win)
+}
+
+func (t Target) Import(img image.Image) draw.Image {
+	pd := pixel.PictureDataFromImage(img)
+	sprite := pixel.NewSprite(pd, pd.Bounds())
+	return _Image{t.win, sprite}
+}
+
+type _Image struct {
+	win    *pixelgl.Window
+	sprite *pixel.Sprite
+}
+
+func (img _Image) Bounds() geometry.Rect {
+	fr := img.sprite.Frame()
+	return geometry.Rect{
+		Min: fromPxV(fr.Min),
+		Max: fromPxV(fr.Max),
+	}
+}
+
+func (img _Image) Draw(m geometry.Mat) {
+	log.Info().
+		Str("matrix", m.String()).
+		Str("sprite.ptr", fmt.Sprintf("%p", img.sprite)).
+		Msg("drawing sprite")
+	img.sprite.Draw(img.win, toPxM(m))
+}
+
+func fromPxV(v pixel.Vec) geometry.Vec {
+	return geometry.V(v.X, v.Y)
 }
 
 func toPxM(m geometry.Mat) pixel.Matrix {

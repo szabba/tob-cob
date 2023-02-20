@@ -6,40 +6,40 @@ package ui
 
 import (
 	"image"
-	"image/color"
 	"os"
 	"sort"
 
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
+	"github.com/rs/zerolog/log"
+	"github.com/szabba/tob-cob/ui/draw"
+	"github.com/szabba/tob-cob/ui/geometry"
 )
 
-type Anchor func(bounds pixel.Rect) (offset pixel.Vec)
+type Anchor func(bounds geometry.Rect) (offset geometry.Vec)
 
-func (anc Anchor) For(bounds pixel.Rect) (offset pixel.Vec) {
+func (anc Anchor) For(bounds geometry.Rect) (offset geometry.Vec) {
 	return anc(bounds)
 }
 
 func AnchorNorthWest() Anchor { return anchorNorthWest }
 
-func anchorNorthWest(bounds pixel.Rect) pixel.Vec {
-	return pixel.V(bounds.W()/2, -bounds.H()/2)
+func anchorNorthWest(bounds geometry.Rect) geometry.Vec {
+	return geometry.V(bounds.W()/2, -bounds.H()/2)
 }
 
 func AnchorSouth() Anchor { return anchorSouth }
 
-func anchorSouth(bounds pixel.Rect) pixel.Vec {
-	return pixel.V(0, bounds.H()/2)
+func anchorSouth(bounds geometry.Rect) geometry.Vec {
+	return geometry.V(0, bounds.H()/2)
 }
 
 type Sprite struct {
-	*pixel.Sprite
+	img draw.Image
 	// offset is the vector by which the sprite has to be moved to ensure the correct anchor point.
-	offset    pixel.Vec
-	transform pixel.Matrix
+	offset    geometry.Vec
+	transform geometry.Mat
 }
 
-func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
+func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -51,56 +51,29 @@ func LoadSprite(fname string, anchor Anchor) (*Sprite, error) {
 		return nil, err
 	}
 
-	pic := pixel.PictureDataFromImage(img)
-	sprite := pixel.NewSprite(pic, pic.Bounds())
-	offset := anchor.For(pic.Bounds())
-	return &Sprite{sprite, offset, pixel.IM}, nil
+	dstImg := dst.Import(img)
+	offset := anchor.For(dstImg.Bounds())
+	return &Sprite{dstImg, offset, geometry.Identity()}, nil
 }
 
-func (sprite Sprite) Draw(dst pixel.Target) {
-	sprite.Sprite.Draw(dst, sprite.matrix())
+func (s Sprite) Draw() {
+	s.img.Draw(s.matrix())
 }
 
-func (sprite Sprite) matrix() pixel.Matrix {
-	m := pixel.IM
-	m = m.Moved(sprite.offset)
-	m = m.Chained(sprite.transform)
-	return m
+func (s Sprite) matrix() geometry.Mat {
+	t := geometry.Translation(s.offset)
+	out := s.transform.Compose(t)
+	log.Info().
+		Str("matrix.out", out.String()).
+		Str("matrix.offsetT", t.String()).
+		Str("matrix.transform", s.transform.String()).
+		Msg("calculated sprite matrix")
+	return out
 }
 
-func (sprite Sprite) Transform(m pixel.Matrix) Sprite {
-	sprite.transform = sprite.transform.Chained(m)
-	return sprite
-}
-
-func (sprite Sprite) Outline(color color.Color, width float64) Outline {
-	frame := sprite.Sprite.Frame()
-	frame = frame.Moved(frame.Center().Scaled(-1))
-	frame = frame.Moved(sprite.offset)
-	frame.Min = sprite.transform.Project(frame.Min)
-	frame.Max = sprite.transform.Project(frame.Max)
-	outline := Outline{
-		Rect:  frame,
-		Color: color,
-		Width: 1,
-	}
-	return outline
-}
-
-type Outline struct {
-	Color color.Color
-	Width float64
-	pixel.Rect
-}
-
-func (out Outline) Draw(dst pixel.Target) {
-	imd := imdraw.New(nil)
-	imd.Color = out.Color
-
-	imd.Push(out.Min, out.Max)
-	imd.Rectangle(1)
-	imd.Draw(dst)
-
+func (s Sprite) Transform(m geometry.Mat) Sprite {
+	s.transform = m.Compose(s.transform)
+	return s
 }
 
 // An OrderedSpriteGroup keeps track of a bunch of sprites and knows how to draw in the correct order.
@@ -117,11 +90,11 @@ func (group *OrderedSpriteGroup) Add(sprites ...Sprite) {
 
 // Draw the added sprites.
 // The set of sprites to draw and their order is forgotten afterwards.
-func (group *OrderedSpriteGroup) Draw(dst pixel.Target) {
+func (group *OrderedSpriteGroup) Draw() {
 	defer group.empty()
 	group.sort()
 	for _, sprite := range group.order {
-		sprite.Draw(dst)
+		sprite.Draw()
 	}
 }
 
@@ -136,7 +109,7 @@ func (group *OrderedSpriteGroup) sort() {
 	})
 }
 
-func (OrderedSpriteGroup) yOf(sprite Sprite) float64 {
-	origin := pixel.V(0, 0)
-	return sprite.transform.Project(origin).Y
+func (OrderedSpriteGroup) yOf(s Sprite) float64 {
+	origin := geometry.V(0, 0)
+	return s.transform.Apply(origin).Y
 }

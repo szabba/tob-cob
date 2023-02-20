@@ -65,17 +65,6 @@ func run() {
 	cam := ui.NewCamera(geometry.V(0, 0))
 	camCont := ui.NewCamController(&cam)
 
-	humanoidSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/humanoid.png"), ui.AnchorSouth())
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		return
-	}
-	cursorSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/cursor.png"), ui.AnchorNorthWest())
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		return
-	}
-
 	space := game.NewSpace()
 	for x := -10; x <= 10; x++ {
 		for y := -10; y <= 10; y++ {
@@ -106,7 +95,27 @@ func run() {
 	w.SetVSync(true)
 
 	inSrc := pixelglinput.New(w)
-	drawTgt := pixelgldraw.New(w)
+	dst := pixelgldraw.New(w)
+
+	humanoidSprite, err := ui.LoadSprite(
+		filepath.Join(execDir, "assets/humanoid.png"),
+		dst,
+		ui.AnchorSouth())
+
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return
+	}
+
+	cursorSprite, err := ui.LoadSprite(
+		filepath.Join(execDir, "assets/cursor.png"),
+		dst,
+		ui.AnchorNorthWest())
+
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return
+	}
 
 	const dt = time.Second / 60
 
@@ -149,23 +158,20 @@ func run() {
 		// Draw
 		w.Clear(Black)
 
-		drawTgt.SetMatrix(cam.Matrix(inSrc.Bounds()))
-		outline.Draw(drawTgt)
+		dst.SetMatrix(cam.Matrix(inSrc.Bounds()))
+		outline.Draw(dst)
 
 		for _, placement := range placements {
 			matrix := placementTransform(outline, placement)
-			sprite := humanoidSprite.Transform(
-				// TODO: redesign the sprite API more closely
-				pixel.Matrix{
-					matrix[0][0], matrix[1][0], matrix[0][1], matrix[1][1], matrix[0][2], matrix[1][2],
-				},
-			)
+			sprite := humanoidSprite.Transform(matrix)
 			spriteGroup.Add(sprite)
 		}
-		spriteGroup.Draw(w)
+		spriteGroup.Draw()
 
-		drawTgt.SetMatrix(geometry.Identity())
-		cursorSprite.Transform(pixel.IM.Moved(w.MousePosition())).Draw(w.Canvas())
+		dst.SetMatrix(geometry.Identity())
+		cursorSprite.
+			Transform(geometry.Translation(inSrc.MousePosition())).
+			Draw()
 
 		// Update after drawing
 		for i, action := range actions {

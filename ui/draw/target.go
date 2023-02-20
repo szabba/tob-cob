@@ -5,6 +5,7 @@
 package draw
 
 import (
+	"image"
 	"image/color"
 
 	"github.com/szabba/tob-cob/ui/geometry"
@@ -13,4 +14,10 @@ import (
 type Target interface {
 	SetMatrix(m geometry.Mat)
 	Rectangle(r geometry.Rect, m geometry.Mat, fill color.Color)
+	Import(img image.Image) Image
+}
+
+type Image interface {
+	Bounds() geometry.Rect
+	Draw(m geometry.Mat)
 }
