@@ -62,7 +62,7 @@ func run() {
 		CellHeight: 30,
 	}
 
-	cam := ui.NewCamera(geometry.V(50, 0))
+	cam := ui.NewCamera(geometry.V(0, 0))
 	camCont := ui.NewCamController(&cam)
 
 	humanoidSprite, err := ui.LoadSprite(filepath.Join(execDir, "assets/humanoid.png"), ui.AnchorSouth())
@@ -113,6 +113,8 @@ func run() {
 	spriteGroup := ui.OrderedSpriteGroup{}
 
 	for !w.Closed() {
+
+		// Update before drawing
 		w.Update()
 		if w.JustReleased(pixelgl.KeyF) {
 			if w.Monitor() == nil {
@@ -144,6 +146,7 @@ func run() {
 
 		camCont.Process(inSrc)
 
+		// Draw
 		w.Clear(Black)
 
 		drawTgt.SetMatrix(cam.Matrix(inSrc.Bounds()))
@@ -161,9 +164,10 @@ func run() {
 		}
 		spriteGroup.Draw(w)
 
-		w.SetMatrix(pixel.IM)
+		drawTgt.SetMatrix(geometry.Identity())
 		cursorSprite.Transform(pixel.IM.Moved(w.MousePosition())).Draw(w.Canvas())
 
+		// Update after drawing
 		for i, action := range actions {
 			actions[i] = runFor(action, dt)
 		}
