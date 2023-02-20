@@ -39,10 +39,12 @@ func (o GridOutline) Draw(dst draw.Target) {
 func (o GridOutline) drawCell(dst draw.Target, pt game.Point) {
 	matrix := o.cellMatrix(pt)
 
-	halfWidth := o.Grid.CellWidth/2 - math.Abs(o.Margins.X)
-	halfHeight := o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)
+	r := geometry.R(
+		-(o.Grid.CellWidth/2 - math.Abs(o.Margins.X)),
+		-(o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)),
+		o.Grid.CellWidth-2*math.Abs(o.Margins.X),
+		o.Grid.CellHeight-2*math.Abs(o.Margins.Y))
 
-	r := geometry.R(-halfWidth, -halfHeight, halfWidth, halfHeight)
 	dst.Rectangle(r, matrix, o.Color)
 }
 
