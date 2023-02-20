@@ -2,11 +2,15 @@ kind: pipeline
 name: default
 
 steps:
+  - name: clear
+    image: ubuntu:xenial-20200212
+    commands:
+      - rm -rf ./out || true
+
   - name: build
     image: ubuntu:xenial-20200212
 
     commands:
-      - rm -rf ./out || true
       - apt-get update -qq
       - apt-get install -qy gcc pkg-config libglfw3-dev curl
       - mkdir -p ./out/dl/go
