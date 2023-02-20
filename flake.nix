@@ -24,6 +24,18 @@
               # Git
               gitMinimal
 
+              # C
+              gcc
+              pkg-config
+
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libXrandr
+              xorg.libXinerama
+              xorg.libXi
+              mesa
+              glew
+
               # Go
               go
               gotools
