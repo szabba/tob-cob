@@ -7,13 +7,16 @@ package geometry
 type Rect struct{ Min, Max Vec }
 
 func R(x, y, w, h float64) Rect {
-	return Rect{Vec{x, y}, Vec{w, h}}
+	return Rect{Vec{x, y}, Vec{x + w, x + h}}
 }
 
-func (r Rect) Center() Vec { return r.diag().Scaled(1 / 2) }
+func (r Rect) Center() Vec {
+	return Vec{
+		(r.Max.X + r.Min.X) / 2,
+		(r.Max.Y + r.Min.Y) / 2,
+	}
+}
 
-func (r Rect) W() float64 { return r.diag().Y }
+func (r Rect) W() float64 { return r.Max.X - r.Min.X }
 
-func (r Rect) H() float64 { return r.diag().Y }
-
-func (r Rect) diag() Vec { return r.Max.Sub(r.Min) }
+func (r Rect) H() float64 { return r.Max.Y - r.Min.Y }
