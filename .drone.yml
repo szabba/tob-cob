@@ -10,8 +10,8 @@ steps:
       - apt-get update -qq
       - apt-get install -qy gcc pkg-config libglfw3-dev curl
       - mkdir -p ./out/dl/go
-      - curl -L -o ./out/dl/go/go1.14.linux-amd64.tar.gz https://dl.google.com/go/go1.14.linux-amd64.tar.gz
-      - tar -C /usr/local -xzf ./out/dl/go/go1.14.linux-amd64.tar.gz
+      - curl -L -o ./out/dl/go/go1.20.1.linux-amd64.tar.gz https://go.dev/dl/go1.20.1.linux-amd64.tar.gz
+      - tar -C /usr/local -xzf ./out/dl/go/go1.20.1.linux-amd64.tar.gz
       - export PATH=$PATH:/usr/local/go/bin
       - go build $BUILD_FLAGS ./...
       - go test $BUILD_FLAGS -cover ./...
