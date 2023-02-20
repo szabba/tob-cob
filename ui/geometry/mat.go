@@ -29,9 +29,18 @@ func Scale(a float64) Mat {
 }
 
 func (m Mat) Compose(o Mat) Mat {
-	out := Mat{}
-	// TODO: Finish
-	return out
+	return Mat{
+		{
+			m[0][0]*o[0][0] + m[0][1]*o[1][0],
+			m[0][0]*o[0][1] + m[0][1]*o[1][1],
+			m[0][0]*o[0][2] + m[0][1]*o[1][2] + m[0][2],
+		},
+		{
+			m[1][0]*o[0][0] + m[1][1]*o[1][0],
+			m[1][0]*o[0][1] + m[1][1]*o[1][1],
+			m[1][0]*o[0][2] + m[1][1]*o[1][2] + m[1][2],
+		},
+	}
 }
 
 func (m Mat) Apply(v Vec) Vec {
