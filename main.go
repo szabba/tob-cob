@@ -123,7 +123,25 @@ func run() {
 
 	for !w.Closed() {
 
-		// Update before drawing
+		// Draw
+		dst.Clear(Black)
+
+		dst.SetMatrix(cam.Matrix(inSrc.Bounds()))
+		outline.Draw(dst)
+
+		for _, placement := range placements {
+			matrix := placementTransform(outline, placement)
+			sprite := humanoidSprite.Transform(matrix)
+			spriteGroup.Add(sprite)
+		}
+		spriteGroup.Draw()
+
+		dst.SetMatrix(geometry.Identity())
+		cursorSprite.
+			Transform(geometry.Translation(inSrc.MousePosition())).
+			Draw()
+
+		// Update
 		w.Update()
 		if w.JustReleased(pixelgl.KeyF) {
 			if w.Monitor() == nil {
@@ -155,25 +173,6 @@ func run() {
 
 		camCont.Process(inSrc)
 
-		// Draw
-		dst.Clear(Black)
-
-		dst.SetMatrix(cam.Matrix(inSrc.Bounds()))
-		outline.Draw(dst)
-
-		for _, placement := range placements {
-			matrix := placementTransform(outline, placement)
-			sprite := humanoidSprite.Transform(matrix)
-			spriteGroup.Add(sprite)
-		}
-		spriteGroup.Draw()
-
-		dst.SetMatrix(geometry.Identity())
-		cursorSprite.
-			Transform(geometry.Translation(inSrc.MousePosition())).
-			Draw()
-
-		// Update after drawing
 		for i, action := range actions {
 			actions[i] = runFor(action, dt)
 		}
