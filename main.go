@@ -27,17 +27,7 @@ import (
 )
 
 func main() {
-	pixelgl.Run(run)
-}
 
-var (
-	Black = pixel.RGB(0, 0, 0)
-	White = pixel.RGB(1, 1, 1)
-	Red   = pixel.RGB(1, 0, 0)
-	Gray  = pixel.RGB(.5, .5, .5)
-)
-
-func run() {
 	log.Logger = log.Logger.Level(zerolog.InfoLevel)
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -50,6 +40,30 @@ func run() {
 		log.Error().Err(err).Msg("")
 		return
 	}
+
+	g := newGame(execDir)
+
+	pixelgl.Run(g.run)
+}
+
+var (
+	Black = pixel.RGB(0, 0, 0)
+	White = pixel.RGB(1, 1, 1)
+	Red   = pixel.RGB(1, 0, 0)
+	Gray  = pixel.RGB(.5, .5, .5)
+)
+
+type _Game struct {
+	execDir string
+}
+
+func newGame(execDir string) *_Game {
+	g := new(_Game)
+	g.execDir = execDir
+	return g
+}
+
+func (g *_Game) run() {
 
 	wcfg := pixelgl.WindowConfig{
 		Title:  "Tears of Butterflies: Colors of Blood",
@@ -98,7 +112,7 @@ func run() {
 	dst := pixelgldraw.New(w)
 
 	humanoidSprite, err := ui.LoadSprite(
-		filepath.Join(execDir, "assets/humanoid.png"),
+		filepath.Join(g.execDir, "assets/humanoid.png"),
 		dst,
 		ui.AnchorSouth())
 
@@ -108,7 +122,7 @@ func run() {
 	}
 
 	cursorSprite, err := ui.LoadSprite(
-		filepath.Join(execDir, "assets/cursor.png"),
+		filepath.Join(g.execDir, "assets/cursor.png"),
 		dst,
 		ui.AnchorNorthWest())
 
