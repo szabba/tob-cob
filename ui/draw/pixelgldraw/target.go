@@ -27,6 +27,8 @@ func New(win *pixelgl.Window) Target {
 
 var _ draw.Target = Target{}
 
+func (t Target) Clear(c color.Color) { t.win.Clear(c) }
+
 func (t Target) SetMatrix(m geometry.Mat) {
 	matrix := toPxM(m)
 	t.win.SetMatrix(matrix)

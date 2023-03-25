@@ -12,6 +12,7 @@ import (
 )
 
 type Target interface {
+	Clear(c color.Color)
 	SetMatrix(m geometry.Mat)
 	Rectangle(r geometry.Rect, m geometry.Mat, fill color.Color)
 	Import(img image.Image) Image

@@ -156,7 +156,7 @@ func run() {
 		camCont.Process(inSrc)
 
 		// Draw
-		w.Clear(Black)
+		dst.Clear(Black)
 
 		dst.SetMatrix(cam.Matrix(inSrc.Bounds()))
 		outline.Draw(dst)
