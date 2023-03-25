@@ -19,6 +19,8 @@ func btn() Button {
 
 var lastID int
 
+func MouseButtonLeft() Button { return mbLeft }
+
 func KeyF() Button { return keyF }
 
 func KeyLeft() Button  { return keyLeft }
@@ -27,6 +29,8 @@ func KeyRight() Button { return keyRight }
 func KeyDown() Button  { return keyDown }
 
 var (
+	mbLeft = btn()
+
 	keyF = btn()
 
 	keyLeft  = btn()

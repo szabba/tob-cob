@@ -107,9 +107,10 @@ func newGame(execDir string) *_Game {
 func (g *_Game) run() {
 
 	wcfg := pixelgl.WindowConfig{
-		Title:  "Tears of Butterflies: Colors of Blood",
-		Bounds: pixel.R(0, 0, 800, 600),
-		VSync:  true,
+		Title:   "Tears of Butterflies: Colors of Blood",
+		Bounds:  pixel.R(0, 0, 800, 600),
+		VSync:   true,
+		Monitor: pixelgl.PrimaryMonitor(),
 	}
 
 	w, err := pixelgl.NewWindow(wcfg)
@@ -134,46 +135,19 @@ func (g *_Game) run() {
 	const dt = time.Second / 60
 
 	for !w.Closed() {
+		start := time.Now()
 
-		// Draw
 		g.Draw(dst, inSrc)
 
-		// Update
 		w.Update()
-		if w.JustReleased(pixelgl.KeyF) {
-			if w.Monitor() == nil {
-				w.SetMonitor(pixelgl.PrimaryMonitor())
-			} else {
-				w.SetMonitor(nil)
-			}
-		}
 
-		if w.JustPressed(pixelgl.MouseButtonLeft) {
-			mouseAt := w.MousePosition()
-			gridPos := g.grid.UnderCursor(inSrc, g.cam)
-			log.Info().
-				Float64("screen.mouse.x", mouseAt.X).
-				Float64("screen.mouse.y", mouseAt.Y).
-				Int("grid.mouse.x", gridPos.Column).
-				Int("grid.mouse.y", gridPos.Row).
-				Msg("clicked")
-		}
+		g.Update(inSrc, dt)
 
-		if w.JustPressed(pixelgl.MouseButtonLeft) && !g.placements[0].Headed() {
-			src := g.space.At(g.placements[0].AtPoint())
-			dst := g.space.At(g.grid.UnderCursor(inSrc, g.cam))
-			g.placements[0].Place(src)
-			path, _ := game.NewPathFinder(g.space).FindPath(src, dst)
-			log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
-			g.actions[0] = g.placements[0].FollowPath(path, time.Second/8)
+		end := time.Now()
+		passed := end.Sub(start)
+		if dt > passed {
+			time.Sleep(dt - passed)
 		}
-
-		g.camCont.Process(inSrc)
-
-		for i, action := range g.actions {
-			g.actions[i] = runFor(action, dt)
-		}
-		time.Sleep(dt)
 	}
 }
 
@@ -217,6 +191,34 @@ func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
 	g.cursorSprite.
 		Transform(geometry.Translation(inSrc.MousePosition())).
 		Draw()
+}
+
+func (g *_Game) Update(inSrc input.Source, dt time.Duration) {
+	if inSrc.JustPressed(input.MouseButtonLeft()) {
+		mouseAt := inSrc.MousePosition()
+		gridPos := g.grid.UnderCursor(inSrc, g.cam)
+		log.Info().
+			Float64("screen.mouse.x", mouseAt.X).
+			Float64("screen.mouse.y", mouseAt.Y).
+			Int("grid.mouse.x", gridPos.Column).
+			Int("grid.mouse.y", gridPos.Row).
+			Msg("clicked")
+	}
+
+	if inSrc.JustPressed(input.MouseButtonLeft()) && !g.placements[0].Headed() {
+		src := g.space.At(g.placements[0].AtPoint())
+		dst := g.space.At(g.grid.UnderCursor(inSrc, g.cam))
+		g.placements[0].Place(src)
+		path, _ := game.NewPathFinder(g.space).FindPath(src, dst)
+		log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
+		g.actions[0] = g.placements[0].FollowPath(path, time.Second/8)
+	}
+
+	g.camCont.Process(inSrc)
+
+	for i, action := range g.actions {
+		g.actions[i] = runFor(action, dt)
+	}
 }
 
 func runFor(action actions.Action, dt time.Duration) actions.Action {

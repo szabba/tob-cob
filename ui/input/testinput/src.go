@@ -21,7 +21,11 @@ var _ input.Source = Source{}
 
 func (Source) Focused() bool { return false }
 
-func (Source) Pressed(input.Button) bool { return false }
+func (Source) JustReleased(_ input.Button) bool { return false }
+
+func (Source) JustPressed(_ input.Button) bool { return false }
+
+func (Source) Pressed(_ input.Button) bool { return false }
 
 func (src Source) Bounds() geometry.Rect {
 	if src.Mock.Bounds == nil {

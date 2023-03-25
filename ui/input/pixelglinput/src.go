@@ -28,7 +28,24 @@ func (src Source) Focused() bool {
 	return src.win.Focused()
 }
 
+func (src Source) JustReleased(btn input.Button) bool {
+	return src.checkButton(btn, (*pixelgl.Window).JustReleased)
+}
+
+func (src Source) JustPressed(btn input.Button) bool {
+	return src.checkButton(btn, (*pixelgl.Window).JustPressed)
+}
+
 func (src Source) Pressed(btn input.Button) bool {
+	return src.checkButton(btn, (*pixelgl.Window).Pressed)
+}
+
+func (src Source) checkButton(
+	btn input.Button,
+	pred func(*pixelgl.Window, pixelgl.Button) bool,
+
+) bool {
+
 	if src.win == nil {
 		return false
 	}
@@ -38,10 +55,12 @@ func (src Source) Pressed(btn input.Button) bool {
 		return false
 	}
 
-	return src.win.Pressed(glBtn)
+	return pred(src.win, glBtn)
 }
 
 var btnMapping = map[input.Button]pixelgl.Button{
+	input.MouseButtonLeft(): pixelgl.MouseButtonLeft,
+
 	input.KeyF(): pixelgl.KeyF,
 
 	input.KeyLeft():  pixelgl.KeyLeft,

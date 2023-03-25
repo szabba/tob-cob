@@ -10,6 +10,8 @@ import (
 
 type Source interface {
 	Focused() bool
+	JustReleased(btn Button) bool
+	JustPressed(btn Button) bool
 	Pressed(btn Button) bool
 	MousePosition() geometry.Vec
 	MouseInsideWindow() bool
