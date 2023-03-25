@@ -5,17 +5,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	_ "image/png"
 	"math"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/faiface/pixel"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slog"
 
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
@@ -28,12 +29,15 @@ import (
 )
 
 func main() {
-	log.Logger = log.Logger.Level(zerolog.InfoLevel)
+	configLogger()
+
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
-		log.Warn().Msg("build info unavailable")
+		slog.Warn("build info unavailable")
 	}
-	log.Info().Interface("build-info", buildInfo).Msg("starting application")
+	slog.Info(
+		"starting application",
+		slog.Any("build-info", buildInfo))
 
 	err := pixelglrun.Game(
 		&_Load{},
@@ -41,9 +45,47 @@ func main() {
 			WithTitle("Tears of Butterflies: Colors of Blood"))
 
 	if err != nil {
-		log.Error().Err(err).Msg("fatal error")
+		slog.Error(
+			"fatal error",
+			slog.String("err", err.Error()))
 		os.Exit(1)
 	}
+}
+
+func configLogger() {
+	envLevel := os.Getenv("LOG_LEVEL")
+
+	lvl := slog.LevelInfo
+	levelErr := lvl.UnmarshalText([]byte(envLevel))
+
+	opts := slog.HandlerOptions{
+		Level: lvl,
+	}
+
+	logFmt := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_FMT")))
+
+	var handler slog.Handler
+	if logFmt == "text" {
+		handler = opts.NewTextHandler(os.Stderr)
+	} else {
+		handler = opts.NewJSONHandler(os.Stderr)
+	}
+
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
+	if levelErr != nil {
+		slog.Warn(
+			"improper LOG_LEVEL",
+			slog.Group("env", slog.String("LOG_LEVEL", envLevel)),
+			slog.String("err", levelErr.Error()),
+		)
+	}
+
+	slog.Log(
+		context.Background(),
+		lvl,
+		"set log level")
 }
 
 var (
@@ -64,7 +106,6 @@ func (l *_Load) Draw(dst draw.Target, _ input.Source) {
 
 	execDir, err := execDir()
 	if err != nil {
-		log.Error().Err(err).Msg("")
 		return
 	}
 
@@ -167,12 +208,17 @@ func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
 	if inSrc.JustPressed(input.MouseButtonLeft()) {
 		mouseAt := inSrc.MousePosition()
 		gridPos := g.grid.UnderCursor(inSrc, g.cam)
-		log.Info().
-			Float64("screen.mouse.x", mouseAt.X).
-			Float64("screen.mouse.y", mouseAt.Y).
-			Int("grid.mouse.x", gridPos.Column).
-			Int("grid.mouse.y", gridPos.Row).
-			Msg("clicked")
+
+		slog.Debug("clicked",
+
+			slog.Group("screen",
+				slog.Float64("mouse-x", mouseAt.X),
+				slog.Float64("mouse-y", mouseAt.Y)),
+
+			slog.Group("grid",
+				slog.Int("mouse-x", gridPos.Column),
+				slog.Int("mouse-y", gridPos.Row)),
+		)
 	}
 
 	if inSrc.JustPressed(input.MouseButtonLeft()) && !g.placements[0].Headed() {
@@ -180,7 +226,15 @@ func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
 		dst := g.space.At(g.grid.UnderCursor(inSrc, g.cam))
 		g.placements[0].Place(src)
 		path, _ := game.NewPathFinder(g.space).FindPath(src, dst)
-		log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
+
+		if slog.Default().Enabled(nil, slog.LevelDebug) {
+
+			asStr := fmt.Sprintf("%#v", path)
+			slog.Debug(
+				"found path",
+				slog.String("path", asStr))
+		}
+
 		g.actions[0] = g.placements[0].FollowPath(path, time.Second/8)
 	}
 

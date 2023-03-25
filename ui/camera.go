@@ -5,9 +5,9 @@
 package ui
 
 import (
-	"github.com/rs/zerolog/log"
 	"github.com/szabba/tob-cob/ui/geometry"
 	"github.com/szabba/tob-cob/ui/input"
+	"golang.org/x/exp/slog"
 )
 
 // A Camera describes the coordinate tranformation between the world and the window.
@@ -32,13 +32,25 @@ func (cam *Camera) MoveBy(delta geometry.Vec) {
 func (cam *Camera) Matrix(bounds geometry.Rect) geometry.Mat {
 	center := bounds.Center()
 	matrix := geometry.Translation(center.Add(cam.lookAt.Scaled(-1)))
-	log.Debug().
-		Float64("center.x", center.X).
-		Float64("center.y", center.Y).
-		Float64("lookAt.x", cam.lookAt.X).
-		Float64("lookAt.y", cam.lookAt.Y).
-		Str("matrix", matrix.String()).
-		Msg("camera matrix calculated")
+
+	if slog.Default().Enabled(nil, slog.LevelDebug) {
+		slog.Debug(
+			"camera matrix calculated",
+
+			slog.Group("center",
+				slog.Float64("x", center.X),
+				slog.Float64("y", center.Y),
+			),
+
+			slog.Group("look-at",
+				slog.Float64("x", cam.lookAt.X),
+				slog.Float64("y", cam.lookAt.Y),
+			),
+
+			slog.String("matrix", matrix.String()),
+		)
+	}
+
 	return matrix
 }
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slog"
 
 	"github.com/szabba/tob-cob/run"
 	"github.com/szabba/tob-cob/ui/draw/pixelgldraw"
@@ -48,13 +48,14 @@ func runFallibly(game run.Game, config run.Config) error {
 	inSrc := pixelglinput.New(w)
 	dst := pixelgldraw.New(w)
 
-	const dt = time.Second / 60
-
+	start := time.Now()
 	for !w.Closed() {
-		log.Debug().Str("game.type", fmt.Sprintf("%T", game)).Msg("running game")
-		start := time.Now()
-
 		game.Draw(dst, inSrc)
+
+		if slog.Default().Enabled(nil, slog.LevelDebug) {
+			typName := fmt.Sprintf("%T", game)
+			slog.Debug("running game", slog.String("game-type", typName))
+		}
 
 		w.Update()
 
@@ -67,12 +68,25 @@ func runFallibly(game run.Game, config run.Config) error {
 		}
 
 		end := time.Now()
-		passed := end.Sub(start)
-		if dt > passed {
-			left := dt - passed
-			log.Debug().Dur("time.left", left).Msg("sleeping until next frame")
-			time.Sleep(left)
-		}
+		sleepRestOfFrame(start, end)
+		start = end
 	}
 	return nil
 }
+
+func sleepRestOfFrame(start, end time.Time) {
+	passed := end.Sub(start)
+	if dt <= passed {
+		return
+	}
+
+	left := dt - passed
+
+	slog.Debug(
+		"sleeping until next frame",
+		slog.Duration("time-left", left))
+
+	time.Sleep(left)
+}
+
+const dt = time.Second / 60

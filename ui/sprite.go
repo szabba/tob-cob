@@ -9,9 +9,9 @@ import (
 	"os"
 	"sort"
 
-	"github.com/rs/zerolog/log"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
+	"golang.org/x/exp/slog"
 )
 
 type Anchor func(bounds geometry.Rect) (offset geometry.Vec)
@@ -63,11 +63,18 @@ func (s Sprite) Draw() {
 func (s Sprite) matrix() geometry.Mat {
 	t := geometry.Translation(s.offset)
 	out := s.transform.Compose(t)
-	log.Info().
-		Str("matrix.out", out.String()).
-		Str("matrix.offsetT", t.String()).
-		Str("matrix.transform", s.transform.String()).
-		Msg("calculated sprite matrix")
+
+	if slog.Default().Enabled(nil, slog.LevelDebug) {
+
+		slog.Debug(
+			"calculated sprite matrix",
+
+			slog.String("out", out.String()),
+			slog.String("offset-t", t.String()),
+			slog.String("transform", s.transform.String()),
+		)
+	}
+
 	return out
 }
 

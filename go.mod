@@ -5,8 +5,8 @@ go 1.19
 require (
 	github.com/faiface/pixel v0.10.0
 	github.com/fzipp/astar v0.0.0-20181223110330-330d9f048c8e
-	github.com/rs/zerolog v1.15.0
 	github.com/szabba/assert v1.0.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 )
 
 require (

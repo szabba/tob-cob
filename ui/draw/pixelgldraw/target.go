@@ -12,9 +12,9 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/rs/zerolog/log"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
+	"golang.org/x/exp/slog"
 )
 
 type Target struct {
@@ -71,10 +71,15 @@ func (img _Image) Bounds() geometry.Rect {
 }
 
 func (img _Image) Draw(m geometry.Mat) {
-	log.Info().
-		Str("matrix", m.String()).
-		Str("sprite.ptr", fmt.Sprintf("%p", img.sprite)).
-		Msg("drawing sprite")
+
+	if slog.Default().Enabled(nil, slog.LevelDebug) {
+		slog.Debug(
+			"drawing sprite",
+			slog.String("matrix", m.String()),
+			slog.String("sprite-ptr", fmt.Sprintf("%p", img.sprite)),
+		)
+	}
+
 	img.sprite.Draw(img.win, toPxM(m))
 }
 
