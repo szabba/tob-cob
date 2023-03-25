@@ -14,22 +14,20 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
+	"github.com/szabba/tob-cob/run"
+	"github.com/szabba/tob-cob/run/pixelglrun"
 	"github.com/szabba/tob-cob/ui"
 	"github.com/szabba/tob-cob/ui/draw"
-	"github.com/szabba/tob-cob/ui/draw/pixelgldraw"
 	"github.com/szabba/tob-cob/ui/geometry"
 	"github.com/szabba/tob-cob/ui/input"
-	"github.com/szabba/tob-cob/ui/input/pixelglinput"
 )
 
 func main() {
-
 	log.Logger = log.Logger.Level(zerolog.InfoLevel)
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -37,15 +35,15 @@ func main() {
 	}
 	log.Info().Interface("build-info", buildInfo).Msg("starting application")
 
-	execDir, err := execDir()
+	err := pixelglrun.Game(
+		&_Load{},
+		run.DefaultConfig().
+			WithTitle("Tears of Butterflies: Colors of Blood"))
+
 	if err != nil {
-		log.Error().Err(err).Msg("")
-		return
+		log.Error().Err(err).Msg("fatal error")
+		os.Exit(1)
 	}
-
-	g := newGame(execDir)
-
-	pixelgl.Run(g.run)
 }
 
 var (
@@ -55,9 +53,47 @@ var (
 	Gray  = pixel.RGB(.5, .5, .5)
 )
 
-type _Game struct {
-	execDir string
+type _Load struct {
+	err error
 
+	humanoidSprite, cursorSprite *ui.Sprite
+}
+
+func (l *_Load) Draw(dst draw.Target, _ input.Source) {
+	dst.Clear(Black)
+
+	execDir, err := execDir()
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return
+	}
+
+	l.humanoidSprite, l.err = ui.LoadSprite(
+		filepath.Join(execDir, "assets/humanoid.png"),
+		dst,
+		ui.AnchorSouth())
+
+	if l.err != nil {
+		return
+	}
+
+	l.cursorSprite, l.err = ui.LoadSprite(
+		filepath.Join(execDir, "assets/cursor.png"),
+		dst,
+		ui.AnchorNorthWest())
+}
+
+func (l *_Load) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
+
+	if l.err != nil {
+		return nil, l.err
+	}
+
+	game := newGame(l.humanoidSprite, l.cursorSprite)
+	return game, nil
+}
+
+type _Game struct {
 	space      *game.Space
 	placements []game.HeadedPlacement
 	actions    []actions.Action
@@ -71,9 +107,8 @@ type _Game struct {
 	humanoidSprite *ui.Sprite
 }
 
-func newGame(execDir string) *_Game {
+func newGame(humanoidSprite, cursorSprite *ui.Sprite) *_Game {
 	g := new(_Game)
-	g.execDir = execDir
 
 	g.space = game.NewSpace()
 	for x := -10; x <= 10; x++ {
@@ -101,75 +136,10 @@ func newGame(execDir string) *_Game {
 	g.cam = ui.NewCamera(geometry.V(0, 0))
 	g.camCont = ui.NewCamController(&g.cam)
 
+	g.humanoidSprite = humanoidSprite
+	g.cursorSprite = cursorSprite
+
 	return g
-}
-
-func (g *_Game) run() {
-
-	wcfg := pixelgl.WindowConfig{
-		Title:   "Tears of Butterflies: Colors of Blood",
-		Bounds:  pixel.R(0, 0, 800, 600),
-		VSync:   true,
-		Monitor: pixelgl.PrimaryMonitor(),
-	}
-
-	w, err := pixelgl.NewWindow(wcfg)
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		return
-	}
-	defer w.Destroy()
-	w.SetCursorVisible(false)
-	w.SetSmooth(false)
-	w.SetVSync(true)
-
-	inSrc := pixelglinput.New(w)
-	dst := pixelgldraw.New(w)
-
-	err = g.load(dst)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to load assets")
-		return
-	}
-
-	const dt = time.Second / 60
-
-	for !w.Closed() {
-		start := time.Now()
-
-		g.Draw(dst, inSrc)
-
-		w.Update()
-
-		g.Update(inSrc, dt)
-
-		end := time.Now()
-		passed := end.Sub(start)
-		if dt > passed {
-			time.Sleep(dt - passed)
-		}
-	}
-}
-
-func (g *_Game) load(dst draw.Target) error {
-
-	var err error
-
-	g.humanoidSprite, err = ui.LoadSprite(
-		filepath.Join(g.execDir, "assets/humanoid.png"),
-		dst,
-		ui.AnchorSouth())
-
-	if err != nil {
-		return err
-	}
-
-	g.cursorSprite, err = ui.LoadSprite(
-		filepath.Join(g.execDir, "assets/cursor.png"),
-		dst,
-		ui.AnchorNorthWest())
-
-	return err
 }
 
 func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
@@ -193,7 +163,7 @@ func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
 		Draw()
 }
 
-func (g *_Game) Update(inSrc input.Source, dt time.Duration) {
+func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
 	if inSrc.JustPressed(input.MouseButtonLeft()) {
 		mouseAt := inSrc.MousePosition()
 		gridPos := g.grid.UnderCursor(inSrc, g.cam)
@@ -219,6 +189,8 @@ func (g *_Game) Update(inSrc input.Source, dt time.Duration) {
 	for i, action := range g.actions {
 		g.actions[i] = runFor(action, dt)
 	}
+
+	return g, nil
 }
 
 func runFor(action actions.Action, dt time.Duration) actions.Action {
