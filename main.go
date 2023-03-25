@@ -21,8 +21,10 @@ import (
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
 	"github.com/szabba/tob-cob/ui"
+	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/draw/pixelgldraw"
 	"github.com/szabba/tob-cob/ui/geometry"
+	"github.com/szabba/tob-cob/ui/input"
 	"github.com/szabba/tob-cob/ui/input/pixelglinput"
 )
 
@@ -55,11 +57,50 @@ var (
 
 type _Game struct {
 	execDir string
+
+	space      *game.Space
+	placements []game.HeadedPlacement
+	actions    []actions.Action
+
+	grid    ui.Grid
+	outline ui.GridOutline
+	cam     ui.Camera
+	camCont *ui.CameraController
+
+	cursorSprite   *ui.Sprite
+	humanoidSprite *ui.Sprite
 }
 
 func newGame(execDir string) *_Game {
 	g := new(_Game)
 	g.execDir = execDir
+
+	g.space = game.NewSpace()
+	for x := -10; x <= 10; x++ {
+		for y := -10; y <= 10; y++ {
+			g.space.At(game.P(y, x)).Create()
+		}
+	}
+
+	g.placements = make([]game.HeadedPlacement, 2)
+	g.placements[0].Place(g.space.At(game.P(1, 1)))
+	g.placements[1].Place(g.space.At(game.P(0, 0)))
+	g.actions = []actions.Action{actions.NoAction(), actions.NoAction()}
+
+	g.grid = ui.Grid{
+		CellWidth:  30,
+		CellHeight: 30,
+	}
+	g.outline = ui.GridOutline{
+		Space:   g.space,
+		Grid:    g.grid,
+		Color:   Gray,
+		Margins: ui.Margins{X: 2.5, Y: 2.5},
+	}
+
+	g.cam = ui.NewCamera(geometry.V(0, 0))
+	g.camCont = ui.NewCamController(&g.cam)
+
 	return g
 }
 
@@ -70,33 +111,6 @@ func (g *_Game) run() {
 		Bounds: pixel.R(0, 0, 800, 600),
 		VSync:  true,
 	}
-
-	grid := ui.Grid{
-		CellWidth:  30,
-		CellHeight: 30,
-	}
-
-	cam := ui.NewCamera(geometry.V(0, 0))
-	camCont := ui.NewCamController(&cam)
-
-	space := game.NewSpace()
-	for x := -10; x <= 10; x++ {
-		for y := -10; y <= 10; y++ {
-			space.At(game.P(y, x)).Create()
-		}
-	}
-
-	outline := ui.GridOutline{
-		Space:   space,
-		Grid:    grid,
-		Color:   Gray,
-		Margins: ui.Margins{X: 2.5, Y: 2.5},
-	}
-
-	placements := make([]game.HeadedPlacement, 2)
-	placements[0].Place(space.At(game.P(1, 1)))
-	placements[1].Place(space.At(game.P(0, 0)))
-	actions := []actions.Action{actions.NoAction(), actions.NoAction()}
 
 	w, err := pixelgl.NewWindow(wcfg)
 	if err != nil {
@@ -111,49 +125,18 @@ func (g *_Game) run() {
 	inSrc := pixelglinput.New(w)
 	dst := pixelgldraw.New(w)
 
-	humanoidSprite, err := ui.LoadSprite(
-		filepath.Join(g.execDir, "assets/humanoid.png"),
-		dst,
-		ui.AnchorSouth())
-
+	err = g.load(dst)
 	if err != nil {
-		log.Error().Err(err).Msg("")
-		return
-	}
-
-	cursorSprite, err := ui.LoadSprite(
-		filepath.Join(g.execDir, "assets/cursor.png"),
-		dst,
-		ui.AnchorNorthWest())
-
-	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Msg("failed to load assets")
 		return
 	}
 
 	const dt = time.Second / 60
 
-	spriteGroup := ui.OrderedSpriteGroup{}
-
 	for !w.Closed() {
 
 		// Draw
-		dst.Clear(Black)
-
-		dst.SetMatrix(cam.Matrix(inSrc.Bounds()))
-		outline.Draw(dst)
-
-		for _, placement := range placements {
-			matrix := placementTransform(outline, placement)
-			sprite := humanoidSprite.Transform(matrix)
-			spriteGroup.Add(sprite)
-		}
-		spriteGroup.Draw()
-
-		dst.SetMatrix(geometry.Identity())
-		cursorSprite.
-			Transform(geometry.Translation(inSrc.MousePosition())).
-			Draw()
+		g.Draw(dst, inSrc)
 
 		// Update
 		w.Update()
@@ -167,7 +150,7 @@ func (g *_Game) run() {
 
 		if w.JustPressed(pixelgl.MouseButtonLeft) {
 			mouseAt := w.MousePosition()
-			gridPos := grid.UnderCursor(inSrc, cam)
+			gridPos := g.grid.UnderCursor(inSrc, g.cam)
 			log.Info().
 				Float64("screen.mouse.x", mouseAt.X).
 				Float64("screen.mouse.y", mouseAt.Y).
@@ -176,22 +159,64 @@ func (g *_Game) run() {
 				Msg("clicked")
 		}
 
-		if w.JustPressed(pixelgl.MouseButtonLeft) && !placements[0].Headed() {
-			src := space.At(placements[0].AtPoint())
-			dst := space.At(grid.UnderCursor(inSrc, cam))
-			placements[0].Place(src)
-			path, _ := game.NewPathFinder(space).FindPath(src, dst)
+		if w.JustPressed(pixelgl.MouseButtonLeft) && !g.placements[0].Headed() {
+			src := g.space.At(g.placements[0].AtPoint())
+			dst := g.space.At(g.grid.UnderCursor(inSrc, g.cam))
+			g.placements[0].Place(src)
+			path, _ := game.NewPathFinder(g.space).FindPath(src, dst)
 			log.Info().Str("path", fmt.Sprintf("%#v", path)).Msg("found path")
-			actions[0] = placements[0].FollowPath(path, time.Second/8)
+			g.actions[0] = g.placements[0].FollowPath(path, time.Second/8)
 		}
 
-		camCont.Process(inSrc)
+		g.camCont.Process(inSrc)
 
-		for i, action := range actions {
-			actions[i] = runFor(action, dt)
+		for i, action := range g.actions {
+			g.actions[i] = runFor(action, dt)
 		}
 		time.Sleep(dt)
 	}
+}
+
+func (g *_Game) load(dst draw.Target) error {
+
+	var err error
+
+	g.humanoidSprite, err = ui.LoadSprite(
+		filepath.Join(g.execDir, "assets/humanoid.png"),
+		dst,
+		ui.AnchorSouth())
+
+	if err != nil {
+		return err
+	}
+
+	g.cursorSprite, err = ui.LoadSprite(
+		filepath.Join(g.execDir, "assets/cursor.png"),
+		dst,
+		ui.AnchorNorthWest())
+
+	return err
+}
+
+func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
+	dst.Clear(Black)
+
+	spriteGroup := ui.OrderedSpriteGroup{}
+
+	dst.SetMatrix(g.cam.Matrix(inSrc.Bounds()))
+	g.outline.Draw(dst)
+
+	for _, placement := range g.placements {
+		matrix := placementTransform(g.outline, placement)
+		sprite := g.humanoidSprite.Transform(matrix)
+		spriteGroup.Add(sprite)
+	}
+	spriteGroup.Draw()
+
+	dst.SetMatrix(geometry.Identity())
+	g.cursorSprite.
+		Transform(geometry.Translation(inSrc.MousePosition())).
+		Draw()
 }
 
 func runFor(action actions.Action, dt time.Duration) actions.Action {
