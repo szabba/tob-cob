@@ -260,7 +260,7 @@ func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
 				slog.String("path", asStr))
 		}
 
-		g.actions[0] = g.placements[0].FollowPath(path, time.Second/8)
+		g.actions[0] = g.placements[0].FollowPath(path, time.Second/4)
 	}
 
 	g.camCont.Process(inSrc)
