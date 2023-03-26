@@ -5,19 +5,15 @@
 package ui
 
 import (
-	"math"
-
-	"github.com/faiface/pixel"
-
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
 )
 
 type GridOutline struct {
+	Sprite  *Sprite
 	Space   *game.Space
 	Grid    Grid
-	Color   pixel.RGBA
 	Margins Margins
 }
 
@@ -39,13 +35,15 @@ func (o GridOutline) Draw(dst draw.Target) {
 func (o GridOutline) drawCell(dst draw.Target, pt game.Point) {
 	matrix := o.cellMatrix(pt)
 
-	r := geometry.R(
-		-(o.Grid.CellWidth/2 - math.Abs(o.Margins.X)),
-		-(o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)),
-		o.Grid.CellWidth-2*math.Abs(o.Margins.X),
-		o.Grid.CellHeight-2*math.Abs(o.Margins.Y))
+	o.Sprite.Transform(matrix).Draw()
 
-	dst.Rectangle(r, matrix, o.Color)
+	// r := geometry.R(
+	// 	-(o.Grid.CellWidth/2 - math.Abs(o.Margins.X)),
+	// 	-(o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)),
+	// 	o.Grid.CellWidth-2*math.Abs(o.Margins.X),
+	// 	o.Grid.CellHeight-2*math.Abs(o.Margins.Y))
+
+	// dst.Rectangle(r, matrix, o.Color)
 }
 
 func (o GridOutline) cellMatrix(pt game.Point) geometry.Mat {

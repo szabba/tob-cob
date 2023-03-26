@@ -13,19 +13,29 @@ import (
 	"github.com/szabba/tob-cob/ui/input"
 )
 
+// A Game that can be run.
+//
+// Draw and Update will never be called concurrently.
+// Besides that no ordering is guaranteed.
+//
+// This package only defines the interface.
+// Runner packages might use different underlying libraries.
 type Game interface {
+	// Draw the game's state onto the target.
 	Draw(tgt draw.Target, src input.Source)
-	Update(src input.Source, dt time.Duration) (Game, error)
-}
 
-type Loader interface {
-	Load(tgt draw.Target) (Game, error)
+	// Update the game's state
+	Update(src input.Source, dt time.Duration) (Game, error)
 }
 
 type Config struct {
 	title string
 
 	width, height int
+
+	windowed bool
+
+	showCursor bool
 }
 
 func DefaultConfig() Config { return Config{} }
@@ -68,3 +78,27 @@ func (c Config) Size() (width, height int) {
 
 	return width, height
 }
+
+func (c Config) WithFullScreen() Config {
+	c.windowed = false
+	return c
+}
+
+func (c Config) WithWindow() Config {
+	c.windowed = true
+	return c
+}
+
+func (c Config) Windowed() bool { return c.windowed }
+
+func (c Config) WithVisibleCursor() Config {
+	c.showCursor = true
+	return c
+}
+
+func (c Config) WithHiddenCursor() Config {
+	c.showCursor = false
+	return c
+}
+
+func (c Config) ShowCursor() bool { return c.showCursor }

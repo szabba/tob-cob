@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"image/color"
 	_ "image/png"
 	"math"
 	"os"
@@ -15,18 +16,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faiface/pixel"
 	"golang.org/x/exp/slog"
 
 	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
 	"github.com/szabba/tob-cob/run"
-	"github.com/szabba/tob-cob/run/pixelglrun"
+	"github.com/szabba/tob-cob/run/ebitenginerun"
 	"github.com/szabba/tob-cob/ui"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
 	"github.com/szabba/tob-cob/ui/input"
 )
+
+var _Black = color.Gray{Y: 0}
 
 func main() {
 	configLogger()
@@ -39,10 +41,12 @@ func main() {
 		"starting application",
 		slog.Any("build-info", buildInfo))
 
-	err := pixelglrun.Game(
-		&_Load{},
-		run.DefaultConfig().
-			WithTitle("Tears of Butterflies: Colors of Blood"))
+	config := run.DefaultConfig().
+		WithTitle("Tears of Butterflies: Colors of Blood").
+		WithVisibleCursor().
+		WithWindow()
+
+	err := ebitenginerun.Game(&_Load{}, config)
 
 	if err != nil {
 		slog.Error(
@@ -88,53 +92,74 @@ func configLogger() {
 		"set log level")
 }
 
-var (
-	Black = pixel.RGB(0, 0, 0)
-	White = pixel.RGB(1, 1, 1)
-	Red   = pixel.RGB(1, 0, 0)
-	Gray  = pixel.RGB(.5, .5, .5)
-)
-
 type _Load struct {
 	err error
 
-	humanoidSprite, cursorSprite *ui.Sprite
+	loadingAttempted bool
+	pathPrefix       string
+
+	humanoid, cursor, tile *ui.Sprite
 }
 
 func (l *_Load) Draw(dst draw.Target, _ input.Source) {
-	dst.Clear(Black)
+	dst.Clear(_Black)
 
-	execDir, err := execDir()
+	if l.loadingAttempted {
+		return
+	}
+	l.loadingAttempted = true
+
+	l.findPathPrefix()
+
+	l.humanoid = l.load("assets/humanoid.png", dst, ui.AnchorSouth())
+
+	l.cursor = l.load("assets/cursor.png", dst, ui.AnchorNorthWest())
+
+	l.tile = l.load("assets/tile.png", dst, ui.AnchorCenter())
+}
+
+func (l *_Load) findPathPrefix() {
+	pathPrefix, err := execDir()
 	if err != nil {
+		l.err = fmt.Errorf("cannot find asset path prefix: %w", err)
 		return
 	}
+	l.pathPrefix = pathPrefix
+}
 
-	l.humanoidSprite, l.err = ui.LoadSprite(
-		filepath.Join(execDir, "assets/humanoid.png"),
-		dst,
-		ui.AnchorSouth())
-
+func (l *_Load) load(path string, dst draw.Target, anchor ui.Anchor) *ui.Sprite {
 	if l.err != nil {
-		return
+		return nil
 	}
 
-	l.cursorSprite, l.err = ui.LoadSprite(
-		filepath.Join(execDir, "assets/cursor.png"),
-		dst,
-		ui.AnchorNorthWest())
+	fpath := filepath.Join(l.pathPrefix, path)
+
+	s, err := ui.LoadSprite(fpath, dst, anchor)
+	if err != nil {
+		l.err = fmt.Errorf("failed to load asser %q: %w", path, err)
+		return nil
+	}
+
+	return s
 }
 
 func (l *_Load) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
+	if !l.loadingAttempted {
+		return l, nil
+	}
 
 	if l.err != nil {
 		return nil, l.err
 	}
 
-	game := newGame(l.humanoidSprite, l.cursorSprite)
+	game := newGame(l.humanoid, l.cursor, l.tile)
 	return game, nil
 }
 
 type _Game struct {
+	cursor   *ui.Sprite
+	humanoid *ui.Sprite
+
 	space      *game.Space
 	placements []game.HeadedPlacement
 	actions    []actions.Action
@@ -143,13 +168,13 @@ type _Game struct {
 	outline ui.GridOutline
 	cam     ui.Camera
 	camCont *ui.CameraController
-
-	cursorSprite   *ui.Sprite
-	humanoidSprite *ui.Sprite
 }
 
-func newGame(humanoidSprite, cursorSprite *ui.Sprite) *_Game {
+func newGame(humanoid, cursor, tile *ui.Sprite) *_Game {
 	g := new(_Game)
+
+	g.humanoid = humanoid
+	g.cursor = cursor
 
 	g.space = game.NewSpace()
 	for x := -10; x <= 10; x++ {
@@ -168,39 +193,39 @@ func newGame(humanoidSprite, cursorSprite *ui.Sprite) *_Game {
 		CellHeight: 30,
 	}
 	g.outline = ui.GridOutline{
+		Sprite:  tile,
 		Space:   g.space,
 		Grid:    g.grid,
-		Color:   Gray,
 		Margins: ui.Margins{X: 2.5, Y: 2.5},
 	}
 
 	g.cam = ui.NewCamera(geometry.V(0, 0))
 	g.camCont = ui.NewCamController(&g.cam)
 
-	g.humanoidSprite = humanoidSprite
-	g.cursorSprite = cursorSprite
-
 	return g
 }
 
 func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
-	dst.Clear(Black)
+	dst.Clear(_Black)
 
 	spriteGroup := ui.OrderedSpriteGroup{}
 
-	dst.SetMatrix(g.cam.Matrix(inSrc.Bounds()))
+	camMatrix := g.cam.Matrix(inSrc.Bounds())
+	dst.SetMatrix(camMatrix)
 	g.outline.Draw(dst)
 
 	for _, placement := range g.placements {
 		matrix := placementTransform(g.outline, placement)
-		sprite := g.humanoidSprite.Transform(matrix)
+
+		sprite := g.humanoid.Transform(matrix)
 		spriteGroup.Add(sprite)
 	}
 	spriteGroup.Draw()
 
 	dst.SetMatrix(geometry.Identity())
-	g.cursorSprite.
-		Transform(geometry.Translation(inSrc.MousePosition())).
+	cursorM := geometry.Translation(inSrc.MousePosition())
+	g.cursor.
+		Transform(cursorM).
 		Draw()
 }
 

@@ -23,13 +23,19 @@ func (anc Anchor) For(bounds geometry.Rect) (offset geometry.Vec) {
 func AnchorNorthWest() Anchor { return anchorNorthWest }
 
 func anchorNorthWest(bounds geometry.Rect) geometry.Vec {
-	return geometry.V(bounds.W()/2, -bounds.H()/2)
+	return geometry.V(0, -bounds.H())
 }
 
 func AnchorSouth() Anchor { return anchorSouth }
 
 func anchorSouth(bounds geometry.Rect) geometry.Vec {
-	return geometry.V(0, bounds.H()/2)
+	return geometry.V(-bounds.W()/2, 0)
+}
+
+func AnchorCenter() Anchor { return anchorCenter }
+
+func anchorCenter(bounds geometry.Rect) geometry.Vec {
+	return geometry.V(-bounds.W()/2, -bounds.H()/2)
 }
 
 type Sprite struct {
@@ -53,6 +59,11 @@ func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
 
 	dstImg := dst.Import(img)
 	offset := anchor.For(dstImg.Bounds())
+	slog.Debug("sprite loaded",
+		slog.String("filename", fname),
+		slog.Any("bounds", dstImg.Bounds()),
+		slog.Any("offset", offset),
+	)
 	return &Sprite{dstImg, offset, geometry.Identity()}, nil
 }
 
@@ -68,10 +79,9 @@ func (s Sprite) matrix() geometry.Mat {
 
 		slog.Debug(
 			"calculated sprite matrix",
-
-			slog.String("out", out.String()),
-			slog.String("offset-t", t.String()),
-			slog.String("transform", s.transform.String()),
+			slog.Any("composed", out),
+			slog.Any("offset-t", t),
+			slog.Any("transform", s.transform),
 		)
 	}
 
