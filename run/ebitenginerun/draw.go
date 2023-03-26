@@ -33,10 +33,6 @@ func (d *_DrawTarget) Clear(c color.Color) { d.dst.Fill(c) }
 
 func (d *_DrawTarget) SetMatrix(m geometry.Mat) { d.matrix = m }
 
-func (d *_DrawTarget) Rectangle(r geometry.Rect, m geometry.Mat, fill color.Color) {
-	// FIXME or TODO REMOVE
-}
-
 func (d *_DrawTarget) Import(img image.Image) draw.Image {
 	src := ebiten.NewImageFromImage(img)
 	return _DrawImage{d, src}
