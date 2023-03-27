@@ -42,9 +42,7 @@ func main() {
 		slog.Any("build-info", buildInfo))
 
 	config := run.DefaultConfig().
-		WithTitle("Tears of Butterflies: Colors of Blood").
-		WithVisibleCursor().
-		WithWindow()
+		WithTitle("Tears of Butterflies: Colors of Blood")
 
 	err := ebitenginerun.Game(&_Load{}, config)
 
