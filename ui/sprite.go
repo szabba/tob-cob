@@ -14,34 +14,44 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// An Anchor computes a point to treat as the position of an image, relative to image bounds.
+// The computed point does not have to live within the image bounds.
 type Anchor func(bounds geometry.Rect) (offset geometry.Vec)
 
 func (anc Anchor) For(bounds geometry.Rect) (offset geometry.Vec) {
 	return anc(bounds)
 }
 
+// AnchorNorthWest sets the anchor point at the upper-leftmost corner of the image.
 func AnchorNorthWest() Anchor { return anchorNorthWest }
 
 func anchorNorthWest(bounds geometry.Rect) geometry.Vec {
-	return geometry.V(0, -bounds.H())
+	// return geometry.V(0, -bounds.H())
+	return geometry.V(bounds.Min.X, bounds.Max.Y)
 }
 
+// AnchorSouth sets the anchor point at the middle of the lower edge of the image.
 func AnchorSouth() Anchor { return anchorSouth }
 
 func anchorSouth(bounds geometry.Rect) geometry.Vec {
-	return geometry.V(-bounds.W()/2, 0)
+	// return geometry.V(-bounds.W()/2, 0)
+	return geometry.V(
+		bounds.Min.X+bounds.W()/2,
+		bounds.Min.Y,
+	)
 }
 
+// AnchorCenter sets the anchor point in the middle of the image.
 func AnchorCenter() Anchor { return anchorCenter }
 
 func anchorCenter(bounds geometry.Rect) geometry.Vec {
-	return geometry.V(-bounds.W()/2, -bounds.H()/2)
+	// return geometry.V(-bounds.W()/2, -bounds.H()/2)
+	return bounds.Center()
 }
 
 type Sprite struct {
-	img draw.Image
-	// offset is the vector by which the sprite has to be moved to ensure the correct anchor point.
-	offset    geometry.Vec
+	img       draw.Image
+	anchor    geometry.Vec // in the image bounds coordinate system
 	transform geometry.Mat
 }
 
@@ -58,13 +68,13 @@ func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
 	}
 
 	dstImg := dst.Import(img)
-	offset := anchor.For(dstImg.Bounds())
-	slog.Debug("sprite loaded",
+	anchorPoint := anchor.For(dstImg.Bounds())
+	slog.Info("sprite loaded",
 		slog.String("filename", fname),
 		slog.Any("bounds", dstImg.Bounds()),
-		slog.Any("offset", offset),
+		slog.Any("anchor-point", anchorPoint),
 	)
-	return &Sprite{dstImg, offset, geometry.Identity()}, nil
+	return &Sprite{dstImg, anchorPoint, geometry.Identity()}, nil
 }
 
 func (s Sprite) Draw() {
@@ -72,12 +82,13 @@ func (s Sprite) Draw() {
 }
 
 func (s Sprite) matrix() geometry.Mat {
-	t := geometry.Translation(s.offset)
+	offset := s.anchor.Sub(s.img.Bounds().Min)
+	t := geometry.Translation(offset)
 	out := s.transform.Compose(t)
 
 	if slog.Default().Enabled(nil, slog.LevelDebug) {
 
-		slog.Debug(
+		slog.Info(
 			"calculated sprite matrix",
 			slog.Any("composed", out),
 			slog.Any("offset-t", t),

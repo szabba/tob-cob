@@ -32,6 +32,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/szabba/assert v1.0.0 h1:cQ4DIY4CI6nC8RxujZ0Sm16ofrFiW0/V+ipV8LNMagU=
 github.com/szabba/assert v1.0.0/go.mod h1:CqRfMH5Sl+E7KXuzjR7k+qLo8XyA9Sq8XND5zyeI1sQ=
+github.com/szabba/assert/v2 v2.0.0 h1:MGy65BsZ7m6csNT+uGgChvZB1/eaJCchcdOkMcTnZYU=
+github.com/szabba/assert/v2 v2.0.0/go.mod h1:gXynB7tcI4Sz9gHhr0Ls/7kC0wZ3tq2tVOSew8P7ZkQ=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
