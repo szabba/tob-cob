@@ -45,13 +45,11 @@ type _DrawImage struct {
 
 func (d _DrawImage) Bounds() geometry.Rect {
 
-	dstHeight := d.dst.bounds.H()
-	_ = dstHeight
 	bounds := d.src.Bounds()
 
 	return geometry.R(
-		float64(0),
-		float64(0), // FIXME: if wrong
+		float64(bounds.Min.X),
+		float64(bounds.Min.Y),
 		float64(bounds.Dx()),
 		float64(bounds.Dy()),
 	)
