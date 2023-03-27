@@ -55,11 +55,22 @@ func (d _DrawImage) Bounds() geometry.Rect {
 	)
 }
 
-func (d _DrawImage) Draw(m geometry.Mat) {
+func (d _DrawImage) Draw(m geometry.Mat, anchor geometry.Vec) {
+
+	composed := d.dst.matrix.Compose(m).Compose(d.anchorOffset(anchor))
+
 	opts := &ebiten.DrawImageOptions{
-		GeoM: d.toGeoM(d.dst.matrix.Compose(m)),
+		GeoM: d.toGeoM(composed),
 	}
+
 	d.dst.dst.DrawImage(d.src, opts)
+}
+
+func (d _DrawImage) anchorOffset(anchor geometry.Vec) geometry.Mat {
+	bounds := d.Bounds()
+	naturalAnchor := bounds.Min.Add(geometry.V(0, bounds.H()))
+	offset := naturalAnchor.Sub(anchor)
+	return geometry.Translation(offset)
 }
 
 func (d _DrawImage) toGeoM(m geometry.Mat) ebiten.GeoM {
@@ -80,17 +91,16 @@ func (_DrawImage) toGeoMLiteral(m geometry.Mat) ebiten.GeoM {
 }
 
 func (d _DrawImage) preFixM() geometry.Mat {
-	bounds := d.Bounds()
 	return geometry.Mat{
 		{1, 0, 0},
-		{0, -1, bounds.H()},
+		{0, -1, 0},
 	}
 }
 
 func (d _DrawImage) postFixM() geometry.Mat {
-	h := d.dst.bounds.H()
+	screenH := d.dst.bounds.H()
 	return geometry.Mat{
 		{1, 0, 0},
-		{0, -1, h},
+		{0, -1, screenH},
 	}
 }

@@ -19,5 +19,9 @@ type Target interface {
 
 type Image interface {
 	Bounds() geometry.Rect
-	Draw(m geometry.Mat)
+
+	// Draw the image on the target that imported it.
+	// The drawn image is transforming by the matrix m and then by the current target-wide matrix.
+	// The anchor is understood to use the same coordinate system as the bounds do.
+	Draw(m geometry.Mat, anchor geometry.Vec)
 }

@@ -78,25 +78,7 @@ func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
 }
 
 func (s Sprite) Draw() {
-	s.img.Draw(s.matrix())
-}
-
-func (s Sprite) matrix() geometry.Mat {
-	offset := s.anchor.Sub(s.img.Bounds().Min)
-	t := geometry.Translation(offset)
-	out := s.transform.Compose(t)
-
-	if slog.Default().Enabled(nil, slog.LevelDebug) {
-
-		slog.Info(
-			"calculated sprite matrix",
-			slog.Any("composed", out),
-			slog.Any("offset-t", t),
-			slog.Any("transform", s.transform),
-		)
-	}
-
-	return out
+	s.img.Draw(s.transform, s.anchor)
 }
 
 func (s Sprite) Transform(m geometry.Mat) Sprite {
