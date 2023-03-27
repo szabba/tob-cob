@@ -7,7 +7,7 @@ package geometry
 type Rect struct{ Min, Max Vec }
 
 func R(x, y, w, h float64) Rect {
-	return Rect{Vec{x, y}, Vec{x + w, x + h}}
+	return Rect{Vec{x, y}, Vec{x + w, y + h}}
 }
 
 func (r Rect) Center() Vec {
