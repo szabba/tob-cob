@@ -149,6 +149,8 @@ func (l *_Load[Loaded]) loadImage(typField reflect.StructField) taskFunc {
 			return fmt.Errorf("cannot set %s", typField.Name)
 		}
 
+		slog.Info("loaded image", slog.String("name", fname))
+
 		valField.Set(reflect.ValueOf(imported))
 		return nil
 	}
