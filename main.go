@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image/color"
 	_ "image/png"
+	"io/fs"
 	"math"
 	"os"
 	"path/filepath"
@@ -23,6 +24,7 @@ import (
 	"github.com/szabba/tob-cob/run"
 	"github.com/szabba/tob-cob/run/ebitenginerun"
 	"github.com/szabba/tob-cob/ui"
+	"github.com/szabba/tob-cob/ui/assets"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
 	"github.com/szabba/tob-cob/ui/input"
@@ -41,10 +43,7 @@ func main() {
 		"starting application",
 		slog.Any("build-info", buildInfo))
 
-	config := run.DefaultConfig().
-		WithTitle("Tears of Butterflies: Colors of Blood")
-
-	err := ebitenginerun.Game(&_Load{}, config)
+	err := mainFallible()
 
 	if err != nil {
 		slog.Error(
@@ -90,73 +89,28 @@ func configLogger() {
 		"set log level")
 }
 
-type _Load struct {
-	err error
+func mainFallible() error {
 
-	loadingAttempted bool
-	pathPrefix       string
+	config := run.DefaultConfig().
+		WithTitle("Tears of Butterflies: Colors of Blood")
 
-	humanoid, cursor, tile *ui.Sprite
-}
-
-func (l *_Load) Draw(dst draw.Target, _ input.Source) {
-	dst.Clear(_Black)
-
-	if l.loadingAttempted {
-		return
-	}
-	l.loadingAttempted = true
-
-	l.findPathPrefix()
-
-	l.humanoid = l.load("assets/humanoid.png", dst, ui.AnchorSouth())
-
-	l.cursor = l.load("assets/cursor.png", dst, ui.AnchorNorthWest())
-
-	l.tile = l.load("assets/tile.png", dst, ui.AnchorCenter())
-}
-
-func (l *_Load) findPathPrefix() {
-	pathPrefix, err := execDir()
+	execDir, err := execDir()
 	if err != nil {
-		l.err = fmt.Errorf("cannot find asset path prefix: %w", err)
-		return
-	}
-	l.pathPrefix = pathPrefix
-}
-
-func (l *_Load) load(path string, dst draw.Target, anchor ui.Anchor) *ui.Sprite {
-	if l.err != nil {
-		return nil
+		return err
 	}
 
-	fpath := filepath.Join(l.pathPrefix, path)
+	assetFs, _ := fs.Sub(os.DirFS(execDir), "assets")
 
-	s, err := ui.LoadSprite(fpath, dst, anchor)
-	if err != nil {
-		l.err = fmt.Errorf("failed to load asser %q: %w", path, err)
-		return nil
-	}
+	load := assets.Load(assetFs, func(loaded _Assets) run.Game {
+		return newGame(loaded)
+	})
 
-	return s
-}
-
-func (l *_Load) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
-	if !l.loadingAttempted {
-		return l, nil
-	}
-
-	if l.err != nil {
-		return nil, l.err
-	}
-
-	game := newGame(l.humanoid, l.cursor, l.tile)
-	return game, nil
+	return ebitenginerun.Game(load, config)
 }
 
 type _Game struct {
-	cursor   *ui.Sprite
-	humanoid *ui.Sprite
+	cursor   ui.Sprite
+	humanoid ui.Sprite
 
 	space      *game.Space
 	placements []game.HeadedPlacement
@@ -168,11 +122,17 @@ type _Game struct {
 	camCont *ui.CameraController
 }
 
-func newGame(humanoid, cursor, tile *ui.Sprite) *_Game {
+type _Assets struct {
+	Cursor   draw.Image `asset:"cursor.png"`
+	Humanoid draw.Image `asset:"humanoid.png"`
+	Tile     draw.Image `asset:"tile.png"`
+}
+
+func newGame(loaded _Assets) *_Game {
 	g := new(_Game)
 
-	g.humanoid = humanoid
-	g.cursor = cursor
+	g.humanoid = ui.NewSprite(loaded.Humanoid, ui.AnchorSouth())
+	g.cursor = ui.NewSprite(loaded.Cursor, ui.AnchorNorthWest())
 
 	g.space = game.NewSpace()
 	for x := -10; x <= 10; x++ {
@@ -191,7 +151,7 @@ func newGame(humanoid, cursor, tile *ui.Sprite) *_Game {
 		CellHeight: 30,
 	}
 	g.outline = ui.GridOutline{
-		Sprite:  tile,
+		Sprite:  ui.NewSprite(loaded.Tile, ui.AnchorCenter()),
 		Space:   g.space,
 		Grid:    g.grid,
 		Margins: ui.Margins{X: 2.5, Y: 2.5},

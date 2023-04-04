@@ -11,7 +11,7 @@ import (
 )
 
 type GridOutline struct {
-	Sprite  *Sprite
+	Sprite  Sprite
 	Space   *game.Space
 	Grid    Grid
 	Margins Margins

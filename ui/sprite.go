@@ -11,7 +11,6 @@ import (
 
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
-	"golang.org/x/exp/slog"
 )
 
 // An Anchor computes a point to treat as the position of an image, relative to image bounds.
@@ -68,13 +67,29 @@ func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
 	}
 
 	dstImg := dst.Import(img)
-	anchorPoint := anchor.For(dstImg.Bounds())
-	slog.Info("sprite loaded",
-		slog.String("filename", fname),
-		slog.Any("bounds", dstImg.Bounds()),
-		slog.Any("anchor-point", anchorPoint),
-	)
-	return &Sprite{dstImg, anchorPoint, geometry.Identity()}, nil
+	// TODO: Move
+	// slog.Info("sprite loaded",
+	// 	slog.String("filename", fname),
+	// 	slog.Any("bounds", dstImg.Bounds()),
+	// 	slog.Any("anchor-point", anchorPoint),
+	// )
+	sprite := NewSprite(dstImg, anchor)
+	return &sprite, nil
+}
+
+func NewSprite(img draw.Image, anchor Anchor) Sprite {
+	if img == nil {
+		panic("nil image")
+	}
+	if anchor == nil {
+		panic("nil anchor")
+	}
+	anchorPt := anchor.For(img.Bounds())
+	return Sprite{
+		img:       img,
+		anchor:    anchorPt,
+		transform: geometry.Identity(),
+	}
 }
 
 func (s Sprite) Draw() {
