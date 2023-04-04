@@ -5,8 +5,6 @@
 package ui
 
 import (
-	"image"
-	"os"
 	"sort"
 
 	"github.com/szabba/tob-cob/ui/draw"
@@ -52,29 +50,6 @@ type Sprite struct {
 	img       draw.Image
 	anchor    geometry.Vec // in the image bounds coordinate system
 	transform geometry.Mat
-}
-
-func LoadSprite(fname string, dst draw.Target, anchor Anchor) (*Sprite, error) {
-	f, err := os.Open(fname)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-
-	dstImg := dst.Import(img)
-	// TODO: Move
-	// slog.Info("sprite loaded",
-	// 	slog.String("filename", fname),
-	// 	slog.Any("bounds", dstImg.Bounds()),
-	// 	slog.Any("anchor-point", anchorPoint),
-	// )
-	sprite := NewSprite(dstImg, anchor)
-	return &sprite, nil
 }
 
 func NewSprite(img draw.Image, anchor Anchor) Sprite {
