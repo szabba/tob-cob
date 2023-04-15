@@ -7,29 +7,29 @@
 ## Build
 
 ```bash
-drone exec
+nix develop
+go build
 ```
 
 Prerequisites:
 
-- drone CLI
-- docker
+- nix (with flakes support)
 
 ## Run
 
 ```bash
-(cd ./out/linux-x64 && steam-run ./tob-cob)
+./tob-cob
 ```
 
 Prerequisites:
 
 - steam-run
 
-## Build with deployment
+## Publish
 
 ```bash
 echo "BUTLER_API_KEY=xxx" > SECRETS # Use actual key instead.
-drone exec --secret-file SECRETS
+earthly --push --secret "$(cat SECRETS)" +deploy
 ```
 
 Prerequisites:

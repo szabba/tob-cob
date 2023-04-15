@@ -48,8 +48,7 @@
               vscode
 
               # CI
-              drone-cli
-              # TODO: use earthly
+              earthly
             ];
 
             # Run when the shell is started up
