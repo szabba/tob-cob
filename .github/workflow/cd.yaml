@@ -12,7 +12,7 @@ jobs:
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      BUTLER_API_TOKEN: ${{ secrets.BUTLER_API_KEY }}
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
       FORCE_COLOR: 1
 
     steps:
@@ -38,4 +38,4 @@ jobs:
         run: earthly --version
 
       - name: Run build
-        run: earthly --push --secrets BUTLER_API_TOKEN=$BUTLER_API_TOKEN --strict ./matchmaker+container-image
+        run: earthly --push --secrets BUTLER_API_KEY=$BUTLER_API_KEY --strict ./matchmaker+container-image
