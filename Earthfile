@@ -1,14 +1,14 @@
 VERSION 0.6
 
 linux-x64:
-    FROM ubuntu:xenial-20200212
+    FROM ubuntu:bionic-20230308
 
     WORKDIR /work
 
     ENV BUILD_FLAGS "-trimpath"
 
     RUN apt-get update -qq
-    RUN apt-get install -qy gcc pkg-config libglfw3-dev curl
+    RUN apt-get install -qy gcc pkg-config xorg-dev libglfw3-dev curl
     RUN mkdir -p ./out/dl/go
     RUN curl -L -o ./out/dl/go/go1.20.3.linux-amd64.tar.gz https://go.dev/dl/go1.20.3.linux-amd64.tar.gz
     RUN tar -C /usr/local -xzf ./out/dl/go/go1.20.3.linux-amd64.tar.gz
