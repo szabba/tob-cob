@@ -5,15 +5,15 @@
 package ui
 
 import (
-	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/grid"
 	"github.com/szabba/tob-cob/ui/draw"
 	"github.com/szabba/tob-cob/ui/geometry"
 )
 
 type GridOutline struct {
 	Sprite  Sprite
-	Space   *game.Space
-	Grid    Grid
+	Space   *grid.Space
+	Dims    GridDimensions
 	Margins Margins
 }
 
@@ -21,7 +21,7 @@ type Margins struct{ X, Y float64 }
 
 func (o GridOutline) Draw(dst draw.Target) {
 	min, max := o.Space.Min(), o.Space.Max()
-	var pt game.Point
+	var pt grid.Point
 	for pt.Row = min.Row; pt.Row <= max.Row; pt.Row++ {
 		for pt.Column = min.Column; pt.Column <= max.Column; pt.Column++ {
 			if !o.Space.At(pt).Exists() {
@@ -32,11 +32,12 @@ func (o GridOutline) Draw(dst draw.Target) {
 	}
 }
 
-func (o GridOutline) drawCell(dst draw.Target, pt game.Point) {
+func (o GridOutline) drawCell(dst draw.Target, pt grid.Point) {
 	matrix := o.cellMatrix(pt)
 
 	o.Sprite.Transform(matrix).Draw()
 
+	// TODO: Remove commented out code
 	// r := geometry.R(
 	// 	-(o.Grid.CellWidth/2 - math.Abs(o.Margins.X)),
 	// 	-(o.Grid.CellHeight/2 - math.Abs(o.Margins.Y)),
@@ -46,6 +47,6 @@ func (o GridOutline) drawCell(dst draw.Target, pt game.Point) {
 	// dst.Rectangle(r, matrix, o.Color)
 }
 
-func (o GridOutline) cellMatrix(pt game.Point) geometry.Mat {
-	return o.Grid.Matrix(pt.Column, pt.Row)
+func (o GridOutline) cellMatrix(pt grid.Point) geometry.Mat {
+	return o.Dims.Matrix(pt.Column, pt.Row)
 }

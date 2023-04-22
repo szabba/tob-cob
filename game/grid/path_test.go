@@ -2,22 +2,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game_test
+package grid_test
 
 import (
 	"testing"
 
 	"github.com/szabba/assert"
 
-	"github.com/szabba/tob-cob/game"
+	"github.com/szabba/tob-cob/game/grid"
 )
 
 func TestEmptyPathIsNotViable(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	finder := grid.NewPathFinder(space)
 
-	path := game.Path{}
+	path := grid.Path{}
 
 	// when
 	viable := finder.IsViable(path)
@@ -28,11 +28,11 @@ func TestEmptyPathIsNotViable(t *testing.T) {
 
 func TestPathOfOneExistingPointIsViable(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	space.At(game.P(3, 4)).Create()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	space.At(grid.P(3, 4)).Create()
+	finder := grid.NewPathFinder(space)
 
-	path := pathOf(space, game.P(3, 4))
+	path := pathOf(space, grid.P(3, 4))
 
 	// when
 	viable := finder.IsViable(path)
@@ -43,10 +43,10 @@ func TestPathOfOneExistingPointIsViable(t *testing.T) {
 
 func TestPathOfOnePointThatDoesNotExistIsUnviable(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	finder := grid.NewPathFinder(space)
 
-	path := pathOf(space, game.P(3, 4))
+	path := pathOf(space, grid.P(3, 4))
 
 	// when
 	viable := finder.IsViable(path)
@@ -57,10 +57,10 @@ func TestPathOfOnePointThatDoesNotExistIsUnviable(t *testing.T) {
 
 func TestPathWithJumpsIsNotViable(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	finder := grid.NewPathFinder(space)
 
-	points := []game.Point{game.P(3, 4), game.P(3, 6)}
+	points := []grid.Point{grid.P(3, 4), grid.P(3, 6)}
 	for _, pt := range points {
 		space.At(pt).Create()
 	}
@@ -76,10 +76,10 @@ func TestPathWithJumpsIsNotViable(t *testing.T) {
 
 func TestPathWithDiagonalsIsNotViable(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	finder := grid.NewPathFinder(space)
 
-	points := []game.Point{game.P(3, 4), game.P(4, 5)}
+	points := []grid.Point{grid.P(3, 4), grid.P(4, 5)}
 	for _, pt := range points {
 		space.At(pt).Create()
 	}
@@ -95,12 +95,12 @@ func TestPathWithDiagonalsIsNotViable(t *testing.T) {
 
 func TestPathFromPointToItselfContainsOnlyIt(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	space.At(game.P(3, 4)).Create()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	space.At(grid.P(3, 4)).Create()
+	finder := grid.NewPathFinder(space)
 
-	src := space.At(game.P(3, 4))
-	dst := space.At(game.P(3, 4))
+	src := space.At(grid.P(3, 4))
+	dst := space.At(grid.P(3, 4))
 
 	// when
 	path, ok := finder.FindPath(src, dst)
@@ -108,18 +108,18 @@ func TestPathFromPointToItselfContainsOnlyIt(t *testing.T) {
 	// then
 	assert.That(ok, t.Errorf, "path search failed")
 	assert.That(finder.IsViable(path), t.Errorf, "found unviable path %#v", path)
-	assertPathFromTo(t.Errorf, path, game.P(3, 4), game.P(3, 4))
+	assertPathFromTo(t.Errorf, path, grid.P(3, 4), grid.P(3, 4))
 }
 
 func TestPathIsNotFoundBetweenDisconnectedPoints(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	space.At(game.P(3, 4)).Create()
-	space.At(game.P(3, 6)).Create()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	space.At(grid.P(3, 4)).Create()
+	space.At(grid.P(3, 6)).Create()
+	finder := grid.NewPathFinder(space)
 
-	src := space.At(game.P(3, 4))
-	dst := space.At(game.P(3, 6))
+	src := space.At(grid.P(3, 4))
+	dst := space.At(grid.P(3, 6))
 
 	// when
 	path, ok := finder.FindPath(src, dst)
@@ -127,19 +127,19 @@ func TestPathIsNotFoundBetweenDisconnectedPoints(t *testing.T) {
 	// then
 	assert.That(!ok, t.Errorf, "path search did not fail")
 	assert.That(finder.IsViable(path), t.Errorf, "found unviable path %#v", path)
-	assertPathFromTo(t.Errorf, path, game.P(3, 4), game.P(3, 4))
+	assertPathFromTo(t.Errorf, path, grid.P(3, 4), grid.P(3, 4))
 }
 
 func TestPathIsFoundBetweenConnectedPoints(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	space.At(game.P(3, 4)).Create()
-	space.At(game.P(3, 5)).Create()
-	space.At(game.P(4, 5)).Create()
-	finder := game.NewPathFinder(space)
+	space := grid.NewSpace()
+	space.At(grid.P(3, 4)).Create()
+	space.At(grid.P(3, 5)).Create()
+	space.At(grid.P(4, 5)).Create()
+	finder := grid.NewPathFinder(space)
 
-	src := space.At(game.P(3, 4))
-	dst := space.At(game.P(4, 5))
+	src := space.At(grid.P(3, 4))
+	dst := space.At(grid.P(4, 5))
 
 	// when
 	path, ok := finder.FindPath(src, dst)
@@ -147,25 +147,25 @@ func TestPathIsFoundBetweenConnectedPoints(t *testing.T) {
 	// then
 	assert.That(ok, t.Errorf, "path search failed")
 	assert.That(finder.IsViable(path), t.Errorf, "found unviable path %#v", path)
-	assertPathFromTo(t.Errorf, path, game.P(3, 4), game.P(4, 5))
+	assertPathFromTo(t.Errorf, path, grid.P(3, 4), grid.P(4, 5))
 }
 
 func TestFoundPathAvoidsTakenPositions(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 	for y := 0; y < 2; y++ {
 		for x := 0; x < 3; x++ {
-			space.At(game.P(y, x)).Create()
+			space.At(grid.P(y, x)).Create()
 		}
 	}
-	taker := game.OnePosTaker{}
-	taken := space.At(game.P(0, 1))
+	taker := grid.OnePosTaker{}
+	taken := space.At(grid.P(0, 1))
 	taken.Take(&taker)
 
-	finder := game.NewPathFinder(space)
+	finder := grid.NewPathFinder(space)
 
-	src := space.At(game.P(0, 0))
-	dst := space.At(game.P(0, 2))
+	src := space.At(grid.P(0, 0))
+	dst := space.At(grid.P(0, 2))
 
 	// when
 	path, ok := finder.FindPath(src, dst)
@@ -179,7 +179,7 @@ func TestFoundPathAvoidsTakenPositions(t *testing.T) {
 	}
 }
 
-func assertPathFromTo(onErr assert.ErrorFunc, path game.Path, from, to game.Point) {
+func assertPathFromTo(onErr assert.ErrorFunc, path grid.Path, from, to grid.Point) {
 	if len(path) == 0 {
 		onErr("path is empty")
 		return
@@ -191,8 +191,8 @@ func assertPathFromTo(onErr assert.ErrorFunc, path game.Path, from, to game.Poin
 
 }
 
-func pathOf(space *game.Space, pts ...game.Point) []game.Position {
-	path := make([]game.Position, len(pts))
+func pathOf(space *grid.Space, pts ...grid.Point) []grid.Position {
+	path := make([]grid.Position, len(pts))
 	for i, pt := range pts {
 		path[i] = space.At(pt)
 	}

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game
+package grid
 
 import (
 	"time"
@@ -12,9 +12,9 @@ import (
 
 // A HeadedPlacement is either:
 //
-//     - nowhere
-//     - at a point
-//     - moving from one point to another
+//   - nowhere
+//   - at a point
+//   - moving from one point to another
 type HeadedPlacement struct {
 	pos, heading OnePosTaker
 	countdown    actions.Countdown

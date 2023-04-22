@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game_test
+package grid_test
 
 import (
 	"testing"
@@ -10,17 +10,17 @@ import (
 
 	"github.com/szabba/assert"
 
-	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
+	"github.com/szabba/tob-cob/game/grid"
 )
 
 func TestPositionsFromTheSameSpaceAtTheSamePointAreEqual(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	first := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	first := space.At(grid.P(13, 25))
 
 	// when
-	second := space.At(game.P(13, 25))
+	second := space.At(grid.P(13, 25))
 
 	// then
 	assert.That(
@@ -30,12 +30,12 @@ func TestPositionsFromTheSameSpaceAtTheSamePointAreEqual(t *testing.T) {
 
 func TestPositionsFromTheTwoSpacesAtTheSamePointAreNotEqual(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	otherSpace := game.NewSpace()
-	first := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	otherSpace := grid.NewSpace()
+	first := space.At(grid.P(13, 25))
 
 	// when
-	second := otherSpace.At(game.P(13, 25))
+	second := otherSpace.At(grid.P(13, 25))
 
 	// then
 	assert.That(
@@ -44,23 +44,23 @@ func TestPositionsFromTheTwoSpacesAtTheSamePointAreNotEqual(t *testing.T) {
 }
 func TestPositionIsAtItsPoint(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// when
-	pos := space.At(game.P(13, 25))
+	pos := space.At(grid.P(13, 25))
 
 	// then
 	assert.That(
-		pos.AtPoint() == game.P(13, 25),
-		t.Errorf, "position at %#v, want %#v", pos.AtPoint(), game.P(13, 25))
+		pos.AtPoint() == grid.P(13, 25),
+		t.Errorf, "position at %#v, want %#v", pos.AtPoint(), grid.P(13, 25))
 }
 
 func TestPositionDoesNotExistByDefault(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// when
-	pos := space.At(game.P(13, 25))
+	pos := space.At(grid.P(13, 25))
 
 	// then
 	assert.That(!pos.Exists(), t.Errorf, "the position should not exist")
@@ -68,8 +68,8 @@ func TestPositionDoesNotExistByDefault(t *testing.T) {
 
 func TestPositionThatDoesNotExist(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
 	ok := pos.Create()
@@ -80,8 +80,8 @@ func TestPositionThatDoesNotExist(t *testing.T) {
 
 func TestPoisitionExistsOnceItHasBeenCreated(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
 	pos.Create()
@@ -92,12 +92,12 @@ func TestPoisitionExistsOnceItHasBeenCreated(t *testing.T) {
 
 func TestOnlyThePositionCreatedExists(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
-	otherPos := space.At(game.P(25, -13))
+	otherPos := space.At(grid.P(25, -13))
 
 	// then
 	assert.That(!otherPos.Exists(), t.Errorf, "the other position should not exist")
@@ -105,8 +105,8 @@ func TestOnlyThePositionCreatedExists(t *testing.T) {
 
 func TestACreatedPositionCanBeDestroyed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
@@ -118,8 +118,8 @@ func TestACreatedPositionCanBeDestroyed(t *testing.T) {
 
 func TestDestroyedPositionShouldNotExist(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
@@ -131,8 +131,8 @@ func TestDestroyedPositionShouldNotExist(t *testing.T) {
 
 func TestDestroyedPositionCanBeRecreated(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 	pos.Destroy()
 
@@ -145,8 +145,8 @@ func TestDestroyedPositionCanBeRecreated(t *testing.T) {
 
 func TestAPositionCannotBeCreatedTwiceInARow(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
@@ -158,8 +158,8 @@ func TestAPositionCannotBeCreatedTwiceInARow(t *testing.T) {
 
 func TestAPositionCannotBeDestroyedTwiceInARow(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Destroy()
 
 	// when
@@ -171,8 +171,8 @@ func TestAPositionCannotBeDestroyedTwiceInARow(t *testing.T) {
 
 func TestAPositionThatWasNotCreatedCannotBeDestroyed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
 	ok := pos.Destroy()
@@ -183,10 +183,10 @@ func TestAPositionThatWasNotCreatedCannotBeDestroyed(t *testing.T) {
 
 func TestAPositionThatDoesNotExistIsNotTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// when
-	pos := space.At(game.P(13, 25))
+	pos := space.At(grid.P(13, 25))
 
 	// then
 	assert.That(!pos.Taken(), t.Errorf, "the position should not be taken")
@@ -194,8 +194,8 @@ func TestAPositionThatDoesNotExistIsNotTaken(t *testing.T) {
 
 func TestAPositionThatWasCreatedIsNotTakenByDefault(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
 	pos.Create()
@@ -206,11 +206,11 @@ func TestAPositionThatWasCreatedIsNotTakenByDefault(t *testing.T) {
 
 func TestAPositionThatDoesNotExistCannotBeTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
-	ok := pos.Take(game.DummyTaker())
+	ok := pos.Take(grid.DummyTaker())
 
 	// then
 	assert.That(!ok, t.Errorf, "taking the pos should fail")
@@ -218,12 +218,12 @@ func TestAPositionThatDoesNotExistCannotBeTaken(t *testing.T) {
 
 func TestAPositionThatExistCanBeTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
-	ok := pos.Take(game.DummyTaker())
+	ok := pos.Take(grid.DummyTaker())
 
 	// then
 	assert.That(ok, t.Errorf, "taking the position should succeed")
@@ -231,13 +231,13 @@ func TestAPositionThatExistCanBeTaken(t *testing.T) {
 
 func TestAPositionCannotBeTakenTwice(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
-	ok := pos.Take(game.DummyTaker())
+	ok := pos.Take(grid.DummyTaker())
 
 	// then
 	assert.That(!ok, t.Errorf, "taking the position for a second time should fail")
@@ -245,10 +245,10 @@ func TestAPositionCannotBeTakenTwice(t *testing.T) {
 
 func TestAPositionThatWasTakenSaysSo(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	taken := pos.Taken()
@@ -259,10 +259,10 @@ func TestAPositionThatWasTakenSaysSo(t *testing.T) {
 
 func TestAPositionCreatedAgainRemainsTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	pos.Create()
@@ -274,10 +274,10 @@ func TestAPositionCreatedAgainRemainsTaken(t *testing.T) {
 
 func TestATakenPositionCannotBeCreated(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	ok := pos.Create()
@@ -288,10 +288,10 @@ func TestATakenPositionCannotBeCreated(t *testing.T) {
 
 func TestAPositionRemainsTakenWhenAnAttemptIsMadeToCreateIt(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	pos.Create()
@@ -302,10 +302,10 @@ func TestAPositionRemainsTakenWhenAnAttemptIsMadeToCreateIt(t *testing.T) {
 
 func TestATakenPositionCannotBeDestroyed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	ok := pos.Destroy()
@@ -316,8 +316,8 @@ func TestATakenPositionCannotBeDestroyed(t *testing.T) {
 
 func TestAPositionThatDoesNotExistCannotBeFreed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	// when
 	ok := pos.Free()
@@ -328,8 +328,8 @@ func TestAPositionThatDoesNotExistCannotBeFreed(t *testing.T) {
 
 func TestAPositionThatIsNotTakenCannotBeFreed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	// when
@@ -341,10 +341,10 @@ func TestAPositionThatIsNotTakenCannotBeFreed(t *testing.T) {
 
 func TestAPositionThatIsTakenCanBeFreed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	ok := pos.Free()
@@ -355,10 +355,10 @@ func TestAPositionThatIsTakenCanBeFreed(t *testing.T) {
 
 func TestAFreedPositionIsNotTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	pos.Free()
@@ -369,8 +369,8 @@ func TestAFreedPositionIsNotTaken(t *testing.T) {
 
 func TestSpaceTakerIsNotifiedWhenItIsLetOntoAPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	taker := &RecordingSpaceTaker{}
@@ -393,8 +393,8 @@ func TestSpaceTakerIsNotifiedWhenItIsLetOntoAPosition(t *testing.T) {
 
 func TestSpaceTakerIsNotifiedWhenItIsForcedOutOfAPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 	pos.Create()
 
 	taker := &RecordingSpaceTaker{}
@@ -466,7 +466,7 @@ func TestActionTakingATakenPositionFails(t *testing.T) {
 	// given
 	action, pos, _ := setUpActionTakingPosition()
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	status := action.Run(time.Second)
@@ -481,7 +481,7 @@ func TestActionTakingATakenPositionLeavesThePositionStateAsIs(t *testing.T) {
 	// given
 	action, pos, _ := setUpActionTakingPosition()
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	action.Run(time.Second)
@@ -496,7 +496,7 @@ func TestActionTakingATakenPositionDoesNotCallTheSpaceTaker(t *testing.T) {
 	// given
 	action, pos, taker := setUpActionTakingPosition()
 	pos.Create()
-	pos.Take(game.DummyTaker())
+	pos.Take(grid.DummyTaker())
 
 	// when
 	action.Run(time.Second)
@@ -549,47 +549,47 @@ func TestActionTakingANonExistentPositionDoesNotCallTheSpaceTaker(t *testing.T) 
 func TestEmptySpaceHasZeroMin(t *testing.T) {
 	// given
 	// when
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// then
-	assert.That(space.Min() == game.Point{}, t.Errorf, "got %#v - want %#v", space.Min(), game.Point{})
+	assert.That(space.Min() == grid.Point{}, t.Errorf, "got %#v - want %#v", space.Min(), grid.Point{})
 }
 
 func TestEmptySpaceHasZeroMax(t *testing.T) {
 	// given
 	// when
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// then
-	assert.That(space.Max() == game.Point{}, t.Errorf, "got %#v - want %#v", space.Max(), game.Point{})
+	assert.That(space.Max() == grid.Point{}, t.Errorf, "got %#v - want %#v", space.Max(), grid.Point{})
 }
 
 func TestSpaceWithOriginHasZeroMin(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// when
-	space.At(game.P(0, 0)).Create()
+	space.At(grid.P(0, 0)).Create()
 
 	// then
-	assert.That(space.Min() == game.Point{}, t.Errorf, "got %#v - want %#v", space.Min(), game.Point{})
+	assert.That(space.Min() == grid.Point{}, t.Errorf, "got %#v - want %#v", space.Min(), grid.Point{})
 }
 
 func TestSpaceWithOriginHasZeroMax(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
 	// when
-	space.At(game.P(0, 0)).Create()
+	space.At(grid.P(0, 0)).Create()
 
 	// then
-	assert.That(space.Max() == game.Point{}, t.Errorf, "got %#v - want %#v", space.Max(), game.Point{})
+	assert.That(space.Max() == grid.Point{}, t.Errorf, "got %#v - want %#v", space.Max(), grid.Point{})
 }
 
 func TestSpaceWithOnePointHasItAsMin(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pt := game.P(3, 7)
+	space := grid.NewSpace()
+	pt := grid.P(3, 7)
 
 	// when
 	space.At(pt).Create()
@@ -600,8 +600,8 @@ func TestSpaceWithOnePointHasItAsMin(t *testing.T) {
 
 func TestSpaceWithOnePointHasIsAsMax(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pt := game.P(3, 7)
+	space := grid.NewSpace()
+	pt := grid.P(3, 7)
 
 	// when
 	space.At(pt).Create()
@@ -612,8 +612,8 @@ func TestSpaceWithOnePointHasIsAsMax(t *testing.T) {
 
 func TestSpaceWithThreePointsInARowHasTheLeftmostAsMin(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	// when
 	space.At(left).Create()
@@ -626,8 +626,8 @@ func TestSpaceWithThreePointsInARowHasTheLeftmostAsMin(t *testing.T) {
 
 func TestSpaceWithThreePointsInARowHasTheRightmostAsMax(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	// when
 	space.At(left).Create()
@@ -640,8 +640,8 @@ func TestSpaceWithThreePointsInARowHasTheRightmostAsMax(t *testing.T) {
 
 func TestSpaceWithThreePointsInARowHasLeftmostAsMinWhenPositionsAreCreatedOutOfOrder(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	// when
 	space.At(mid).Create()
@@ -654,8 +654,8 @@ func TestSpaceWithThreePointsInARowHasLeftmostAsMinWhenPositionsAreCreatedOutOfO
 
 func TestSpaceWithThreePointsInARowHasRightmostAsMaxWhenPositionsAreCreatedOutOfOrder(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	// when
 	space.At(left).Create()
@@ -668,8 +668,8 @@ func TestSpaceWithThreePointsInARowHasRightmostAsMaxWhenPositionsAreCreatedOutOf
 
 func TestSpaceWithThreePointsInARowHasMiddleOneAsMinAfterTheLeftmostOneIsRemoved(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	space.At(left).Create()
 	space.At(mid).Create()
@@ -684,8 +684,8 @@ func TestSpaceWithThreePointsInARowHasMiddleOneAsMinAfterTheLeftmostOneIsRemoved
 
 func TestSpaceWithThreePointsInARowHasMiddleOneAsMaxAfterTheRightmostOneIsRemoved(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	left, mid, right := game.P(3, 7), game.P(3, 8), game.P(3, 10)
+	space := grid.NewSpace()
+	left, mid, right := grid.P(3, 7), grid.P(3, 8), grid.P(3, 10)
 
 	space.At(left).Create()
 	space.At(mid).Create()
@@ -700,8 +700,8 @@ func TestSpaceWithThreePointsInARowHasMiddleOneAsMaxAfterTheRightmostOneIsRemove
 
 func TestSpaceWithThreePointsInAColumnHasTheBottomOneAsMin(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	// when
 	space.At(bottom).Create()
@@ -714,8 +714,8 @@ func TestSpaceWithThreePointsInAColumnHasTheBottomOneAsMin(t *testing.T) {
 
 func TestSpaceWithThreePointsInAColumnHasTheTopOneAsMax(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	// when
 	space.At(bottom).Create()
@@ -728,8 +728,8 @@ func TestSpaceWithThreePointsInAColumnHasTheTopOneAsMax(t *testing.T) {
 
 func TestSpaceWithThreePointsInAColumnHasBottomOneAsMinWhenPositionsAreCreatedOutOfOrder(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	// when
 	space.At(mid).Create()
@@ -742,8 +742,8 @@ func TestSpaceWithThreePointsInAColumnHasBottomOneAsMinWhenPositionsAreCreatedOu
 
 func TestSpaceWithThreePointsInAColumnHasTopOneAsMaxWhenPositionsAreCreatedOutOfOrder(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	// when
 	space.At(top).Create()
@@ -756,8 +756,8 @@ func TestSpaceWithThreePointsInAColumnHasTopOneAsMaxWhenPositionsAreCreatedOutOf
 
 func TestSpaceWithThreePointsInAColumnHasMiddleOneAsMinAfterTheBottomOneIsRemoved(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	space.At(bottom).Create()
 	space.At(mid).Create()
@@ -772,8 +772,8 @@ func TestSpaceWithThreePointsInAColumnHasMiddleOneAsMinAfterTheBottomOneIsRemove
 
 func TestSpaceWithThreePointsInAColumnHasMiddleOneAsMaxAfterTheTopOneIsRemoved(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	bottom, mid, top := game.P(3, 7), game.P(4, 7), game.P(6, 7)
+	space := grid.NewSpace()
+	bottom, mid, top := grid.P(3, 7), grid.P(4, 7), grid.P(6, 7)
 
 	space.At(bottom).Create()
 	space.At(mid).Create()
@@ -786,13 +786,13 @@ func TestSpaceWithThreePointsInAColumnHasMiddleOneAsMaxAfterTheTopOneIsRemoved(t
 	assert.That(space.Max() == mid, t.Errorf, "got %#v - want %#v", space.Max(), mid)
 }
 
-func setUpActionTakingPosition() (actions.Action, game.Position, *RecordingSpaceTaker) {
-	space := game.NewSpace()
-	pos := space.At(game.P(13, 25))
+func setUpActionTakingPosition() (actions.Action, grid.Position, *RecordingSpaceTaker) {
+	space := grid.NewSpace()
+	pos := space.At(grid.P(13, 25))
 
 	var taker RecordingSpaceTaker
 
-	action := game.TakePosition(pos, &taker)
+	action := grid.TakePosition(pos, &taker)
 
 	return action, pos, &taker
 }
@@ -801,9 +801,9 @@ type RecordingSpaceTaker struct {
 	Calls []RecordedSpaceTakerCall
 }
 
-var _ game.SpaceTaker = &RecordingSpaceTaker{}
+var _ grid.SpaceTaker = &RecordingSpaceTaker{}
 
-func (taker *RecordingSpaceTaker) LetOnto(pos game.Position) {
+func (taker *RecordingSpaceTaker) LetOnto(pos grid.Position) {
 	call := RecordedSpaceTakerCall{
 		Method:   "LetOnto",
 		Position: pos,
@@ -811,7 +811,7 @@ func (taker *RecordingSpaceTaker) LetOnto(pos game.Position) {
 	taker.Calls = append(taker.Calls, call)
 }
 
-func (taker *RecordingSpaceTaker) ForceOff(pos game.Position) {
+func (taker *RecordingSpaceTaker) ForceOff(pos grid.Position) {
 	call := RecordedSpaceTakerCall{
 		Method:   "ForceOff",
 		Position: pos,
@@ -821,5 +821,5 @@ func (taker *RecordingSpaceTaker) ForceOff(pos game.Position) {
 
 type RecordedSpaceTakerCall struct {
 	Method   string
-	Position game.Position
+	Position grid.Position
 }

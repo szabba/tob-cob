@@ -2,34 +2,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game_test
+package grid_test
 
 import (
 	"testing"
 
 	"github.com/szabba/assert"
-	"github.com/szabba/tob-cob/game"
+
+	"github.com/szabba/tob-cob/game/grid"
 )
 
 func TestOnePosTakerStartsEmpty(t *testing.T) {
 	// given
 	// when
-	taker := game.OnePosTaker{}
+	taker := grid.OnePosTaker{}
 
 	// then
 	assert.That(!taker.Placed(), t.Errorf, "the taker is placed - it should not")
 	assert.That(
-		taker.AtPoint() == game.Point{},
-		t.Errorf, "reported at point %#v - want %#v", taker.AtPoint(), game.Point{})
+		taker.AtPoint() == grid.Point{},
+		t.Errorf, "reported at point %#v - want %#v", taker.AtPoint(), grid.Point{})
 }
 
 func TestOnePosTakerCanTakePosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	taker := game.OnePosTaker{}
+	taker := grid.OnePosTaker{}
 
 	// when
 	pos.Take(&taker)
@@ -43,13 +44,13 @@ func TestOnePosTakerCanTakePosition(t *testing.T) {
 
 func TestOnePosTakerCanBeMovedToNewPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	src := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	src := space.At(grid.P(2, 3))
 	src.Create()
-	dst := space.At(game.P(2, 4))
+	dst := space.At(grid.P(2, 4))
 	dst.Create()
 
-	taker := game.OnePosTaker{}
+	taker := grid.OnePosTaker{}
 	src.Take(&taker)
 
 	// when
@@ -64,13 +65,13 @@ func TestOnePosTakerCanBeMovedToNewPosition(t *testing.T) {
 
 func TestOnePosTakerLeavesOldPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	src := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	src := space.At(grid.P(2, 3))
 	src.Create()
-	dst := space.At(game.P(2, 4))
+	dst := space.At(grid.P(2, 4))
 	dst.Create()
 
-	taker := game.OnePosTaker{}
+	taker := grid.OnePosTaker{}
 	src.Take(&taker)
 
 	// when
@@ -82,11 +83,11 @@ func TestOnePosTakerLeavesOldPosition(t *testing.T) {
 
 func TestOnePosTakerCanLeaveTakenPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	taker := game.OnePosTaker{}
+	taker := grid.OnePosTaker{}
 	pos.Take(&taker)
 
 	// when
@@ -95,6 +96,6 @@ func TestOnePosTakerCanLeaveTakenPosition(t *testing.T) {
 	// then
 	assert.That(!taker.Placed(), t.Errorf, "the taker is placed - it should not be")
 	assert.That(
-		taker.AtPoint() == game.Point{},
-		t.Fatalf, "reported at point %#v - want %#v", taker.AtPoint(), game.Point{})
+		taker.AtPoint() == grid.Point{},
+		t.Fatalf, "reported at point %#v - want %#v", taker.AtPoint(), grid.Point{})
 }

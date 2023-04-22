@@ -2,21 +2,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package game_test
+package grid_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/szabba/assert"
-	"github.com/szabba/tob-cob/game"
+
 	"github.com/szabba/tob-cob/game/actions"
+	"github.com/szabba/tob-cob/game/grid"
 )
 
 func TestZeroHeadedPlacementIsNotPlaced(t *testing.T) {
 	// given
 	// when
-	zero := game.HeadedPlacement{}
+	zero := grid.HeadedPlacement{}
 
 	// then
 	assertNotPlaced(t, &zero)
@@ -25,7 +26,7 @@ func TestZeroHeadedPlacementIsNotPlaced(t *testing.T) {
 func TestZeroHeadedPlacementIsNotHeaded(t *testing.T) {
 	// given
 	// when
-	zero := game.HeadedPlacement{}
+	zero := grid.HeadedPlacement{}
 
 	// then
 	assertNotHeaded(t, &zero)
@@ -34,7 +35,7 @@ func TestZeroHeadedPlacementIsNotHeaded(t *testing.T) {
 func TestZeroHeadedPlacementHasNoProgress(t *testing.T) {
 	// given
 	// when
-	zero := game.HeadedPlacement{}
+	zero := grid.HeadedPlacement{}
 
 	// then
 	assert.That(zero.Progress() == 0, t.Errorf, "got progress %v - want %v", zero.Progress(), 0)
@@ -42,10 +43,10 @@ func TestZeroHeadedPlacementHasNoProgress(t *testing.T) {
 
 func TestHeadedPlacementCannotBePlacedAtPositionThatDoesNotExist(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	ok := placement.Place(pos)
@@ -58,11 +59,11 @@ func TestHeadedPlacementCannotBePlacedAtPositionThatDoesNotExist(t *testing.T) {
 
 func TestHeadedPlacementCannotBePlacedAtPositionThatIsAlreadyTaken(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
-	pos.Take(game.DummyTaker())
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
+	pos.Take(grid.DummyTaker())
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	ok := placement.Place(pos)
@@ -75,11 +76,11 @@ func TestHeadedPlacementCannotBePlacedAtPositionThatIsAlreadyTaken(t *testing.T)
 
 func TestHeadedPlacementCanBePlaced(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	ok := placement.Place(pos)
@@ -95,11 +96,11 @@ func TestHeadedPlacementCanBePlaced(t *testing.T) {
 
 func TestHeadedPlacementCannotMoveIfNotPlaced(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	action := placement.MoveTo(pos, time.Second)
@@ -112,13 +113,13 @@ func TestHeadedPlacementCannotMoveIfNotPlaced(t *testing.T) {
 
 func TestPlacedHeadedPlacementCanMove(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
-	dst := space.At(game.P(2, 4))
+	dst := space.At(grid.P(2, 4))
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(pos)
 
 	timeNeeded := time.Second
@@ -138,11 +139,11 @@ func TestPlacedHeadedPlacementCanMove(t *testing.T) {
 
 func TestPlacedHeadedPlacementHasCompleted(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	placement.Place(pos)
@@ -153,13 +154,13 @@ func TestPlacedHeadedPlacementHasCompleted(t *testing.T) {
 
 func TestPlacedHeadedPlacementBecomesHeadedWhenAMoveStarts(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
-	dst := space.At(game.P(2, 4))
+	dst := space.At(grid.P(2, 4))
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(pos)
 
 	timeNeeded := time.Second
@@ -174,13 +175,13 @@ func TestPlacedHeadedPlacementBecomesHeadedWhenAMoveStarts(t *testing.T) {
 
 func TestHeadedPlacementProgressReflectsFractionOfTheMoveTimeThatHasPassed(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
-	dst := space.At(game.P(2, 4))
+	dst := space.At(grid.P(2, 4))
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(pos)
 
 	timeNeeded := 4 * time.Second
@@ -195,11 +196,11 @@ func TestHeadedPlacementProgressReflectsFractionOfTheMoveTimeThatHasPassed(t *te
 
 func TestFreshlyPlacedHeadedPlacementHasNoHeading(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
 	// when
 	placement.Place(pos)
@@ -211,14 +212,14 @@ func TestFreshlyPlacedHeadedPlacementHasNoHeading(t *testing.T) {
 
 func TestHeadedPlacementLosesHeadingAfterBeingPlaced(t *testing.T) {
 	// given
-	space := game.NewSpace()
-	pos := space.At(game.P(2, 3))
+	space := grid.NewSpace()
+	pos := space.At(grid.P(2, 3))
 	pos.Create()
-	moveDst := space.At(game.P(2, 4))
+	moveDst := space.At(grid.P(2, 4))
 	moveDst.Create()
-	dst := space.At(game.P(1, 3))
+	dst := space.At(grid.P(1, 3))
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(pos)
 
 	timeNeeded := 4 * time.Second
@@ -237,9 +238,9 @@ func TestHeadedPlacementLosesHeadingAfterBeingPlaced(t *testing.T) {
 
 func TestFollowingAnEmptyPathCompletesImmediately(t *testing.T) {
 	// given
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
-	path := game.Path{}
+	path := grid.Path{}
 	stepTime := time.Second
 
 	action := placement.FollowPath(path, stepTime)
@@ -254,15 +255,15 @@ func TestFollowingAnEmptyPathCompletesImmediately(t *testing.T) {
 
 func TestFollowingASinglePositionPathCompletesImmediatelyWhenThePlacementIsAlreadyThere(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	pos := space.At(game.P(1, 2))
+	pos := space.At(grid.P(1, 2))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(pos)
 
-	path, stepTime := game.Path{pos}, time.Second
+	path, stepTime := grid.Path{pos}, time.Second
 
 	action := placement.FollowPath(path, stepTime)
 
@@ -276,14 +277,14 @@ func TestFollowingASinglePositionPathCompletesImmediatelyWhenThePlacementIsAlrea
 
 func TestFollowingASinglePositionPathFailsImmediatelyWhenThePlacementIsAlreadyThere(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	pos := space.At(game.P(1, 2))
+	pos := space.At(grid.P(1, 2))
 	pos.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 
-	path, stepTime := game.Path{pos}, time.Second
+	path, stepTime := grid.Path{pos}, time.Second
 
 	action := placement.FollowPath(path, stepTime)
 
@@ -297,16 +298,16 @@ func TestFollowingASinglePositionPathFailsImmediatelyWhenThePlacementIsAlreadyTh
 
 func TestFollowingASingleStepPathCompletesAtTheStepTime(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3))
+	src, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3))
 	src.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, dst}, time.Second
+	path, stepTime := grid.Path{src, dst}, time.Second
 
 	action := placement.FollowPath(path, stepTime)
 
@@ -320,16 +321,16 @@ func TestFollowingASingleStepPathCompletesAtTheStepTime(t *testing.T) {
 
 func TestFollowingASignleStepPathToCompletionPutsThePlacementAtRightPosition(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3))
+	src, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3))
 	src.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, dst}, time.Second
+	path, stepTime := grid.Path{src, dst}, time.Second
 	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
 
 	action := placement.FollowPath(path, stepTime)
@@ -344,17 +345,17 @@ func TestFollowingASignleStepPathToCompletionPutsThePlacementAtRightPosition(t *
 
 func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesTheActionPaused(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src, mid, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3)), space.At(grid.P(1, 4))
 	src.Create()
 	mid.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, mid, dst}, time.Second
+	path, stepTime := grid.Path{src, mid, dst}, time.Second
 	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
 
 	action := placement.FollowPath(path, stepTime)
@@ -369,17 +370,17 @@ func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesTheActionPaused(t *tes
 
 func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesThePlacementAtTheMidpoint(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src, mid, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3)), space.At(grid.P(1, 4))
 	src.Create()
 	mid.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, mid, dst}, time.Second
+	path, stepTime := grid.Path{src, mid, dst}, time.Second
 	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
 
 	action := placement.FollowPath(path, stepTime)
@@ -394,17 +395,17 @@ func TestFollowingATwoStepPathForHalfTheRequiredTimeLeavesThePlacementAtTheMidpo
 
 func TestFollowingATwoStepPathForTheRequiredTimeLeavesActionDone(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src, mid, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3)), space.At(grid.P(1, 4))
 	src.Create()
 	mid.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, mid, dst}, time.Second
+	path, stepTime := grid.Path{src, mid, dst}, time.Second
 	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
 
 	action := placement.FollowPath(path, stepTime)
@@ -420,17 +421,17 @@ func TestFollowingATwoStepPathForTheRequiredTimeLeavesActionDone(t *testing.T) {
 
 func TestFollowingATwoStepPathForTheRequiredTimeLeavesThePlacementAtTheDestination(t *testing.T) {
 	// given
-	space := game.NewSpace()
+	space := grid.NewSpace()
 
-	src, mid, dst := space.At(game.P(1, 2)), space.At(game.P(1, 3)), space.At(game.P(1, 4))
+	src, mid, dst := space.At(grid.P(1, 2)), space.At(grid.P(1, 3)), space.At(grid.P(1, 4))
 	src.Create()
 	mid.Create()
 	dst.Create()
 
-	placement := game.HeadedPlacement{}
+	placement := grid.HeadedPlacement{}
 	placement.Place(src)
 
-	path, stepTime := game.Path{src, mid, dst}, time.Second
+	path, stepTime := grid.Path{src, mid, dst}, time.Second
 	assertPathFromTo(assumption(t), path, src.AtPoint(), dst.AtPoint())
 
 	action := placement.FollowPath(path, stepTime)
@@ -450,28 +451,28 @@ func assumption(t *testing.T) assert.ErrorFunc {
 	}
 }
 
-func assertNotPlaced(t *testing.T, pl *game.HeadedPlacement) {
+func assertNotPlaced(t *testing.T, pl *grid.HeadedPlacement) {
 	assert.That(!pl.Placed(), t.Errorf, "placement is placed - it should not be")
 	assert.That(
-		pl.AtPoint() == game.Point{},
-		t.Errorf, "placement reported at %#v - should be %#v", pl.AtPoint(), game.Point{})
+		pl.AtPoint() == grid.Point{},
+		t.Errorf, "placement reported at %#v - should be %#v", pl.AtPoint(), grid.Point{})
 }
 
-func assertPlaced(t *testing.T, pl *game.HeadedPlacement, at game.Point) {
+func assertPlaced(t *testing.T, pl *grid.HeadedPlacement, at grid.Point) {
 	assert.That(pl.Placed(), t.Errorf, "placement is not placed - it should be")
 	assert.That(
 		pl.AtPoint() == at,
 		t.Errorf, "placement reported at %#v - should be %#v", pl.AtPoint(), at)
 }
 
-func assertNotHeaded(t *testing.T, pl *game.HeadedPlacement) {
+func assertNotHeaded(t *testing.T, pl *grid.HeadedPlacement) {
 	assert.That(!pl.Headed(), t.Errorf, "placement is headed - it should not be")
 	assert.That(
-		pl.Heading() == game.Point{},
-		t.Errorf, "reported heading to %#v - should be %#v", pl.AtPoint(), game.Point{})
+		pl.Heading() == grid.Point{},
+		t.Errorf, "reported heading to %#v - should be %#v", pl.AtPoint(), grid.Point{})
 }
 
-func assertHeaded(t *testing.T, pl *game.HeadedPlacement, to game.Point) {
+func assertHeaded(t *testing.T, pl *grid.HeadedPlacement, to grid.Point) {
 	assert.That(pl.Headed(), t.Errorf, "placement is not headed - it should be")
 	assert.That(
 		pl.Heading() == to,

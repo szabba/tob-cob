@@ -19,10 +19,12 @@ import (
 
 	"golang.org/x/exp/slog"
 
-	"github.com/szabba/tob-cob/game"
 	"github.com/szabba/tob-cob/game/actions"
+	"github.com/szabba/tob-cob/game/grid"
+
 	"github.com/szabba/tob-cob/run"
 	"github.com/szabba/tob-cob/run/ebitenginerun"
+
 	"github.com/szabba/tob-cob/ui"
 	"github.com/szabba/tob-cob/ui/assets"
 	"github.com/szabba/tob-cob/ui/draw"
@@ -112,11 +114,11 @@ type _Game struct {
 	cursor   ui.Sprite
 	humanoid ui.Sprite
 
-	space      *game.Space
-	placements []game.HeadedPlacement
+	space      *grid.Space
+	placements []grid.HeadedPlacement
 	actions    []actions.Action
 
-	grid    ui.Grid
+	grid    ui.GridDimensions
 	outline ui.GridOutline
 	cam     ui.Camera
 	camCont *ui.CameraController
@@ -134,26 +136,26 @@ func newGame(loaded _Assets) *_Game {
 	g.humanoid = ui.NewSprite(loaded.Humanoid, ui.AnchorSouth())
 	g.cursor = ui.NewSprite(loaded.Cursor, ui.AnchorNorthWest())
 
-	g.space = game.NewSpace()
+	g.space = grid.NewSpace()
 	for x := -10; x <= 10; x++ {
 		for y := -10; y <= 10; y++ {
-			g.space.At(game.P(y, x)).Create()
+			g.space.At(grid.P(y, x)).Create()
 		}
 	}
 
-	g.placements = make([]game.HeadedPlacement, 2)
-	g.placements[0].Place(g.space.At(game.P(1, 1)))
-	g.placements[1].Place(g.space.At(game.P(0, 0)))
+	g.placements = make([]grid.HeadedPlacement, 2)
+	g.placements[0].Place(g.space.At(grid.P(1, 1)))
+	g.placements[1].Place(g.space.At(grid.P(0, 0)))
 	g.actions = []actions.Action{actions.NoAction(), actions.NoAction()}
 
-	g.grid = ui.Grid{
+	g.grid = ui.GridDimensions{
 		CellWidth:  30,
 		CellHeight: 30,
 	}
 	g.outline = ui.GridOutline{
 		Sprite:  ui.NewSprite(loaded.Tile, ui.AnchorCenter()),
 		Space:   g.space,
-		Grid:    g.grid,
+		Dims:    g.grid,
 		Margins: ui.Margins{X: 2.5, Y: 2.5},
 	}
 
@@ -208,7 +210,7 @@ func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
 		src := g.space.At(g.placements[0].AtPoint())
 		dst := g.space.At(g.grid.UnderCursor(inSrc, g.cam))
 		g.placements[0].Place(src)
-		path, _ := game.NewPathFinder(g.space).FindPath(src, dst)
+		path, _ := grid.NewPathFinder(g.space).FindPath(src, dst)
 
 		if slog.Default().Enabled(nil, slog.LevelDebug) {
 
@@ -243,9 +245,9 @@ func runFor(action actions.Action, dt time.Duration) actions.Action {
 	return action
 }
 
-func placementTransform(outline ui.GridOutline, placement game.HeadedPlacement) geometry.Mat {
+func placementTransform(outline ui.GridOutline, placement grid.HeadedPlacement) geometry.Mat {
 	src := placement.AtPoint()
-	grid := outline.Grid
+	grid := outline.Dims
 	bottom := geometry.V(0, -grid.CellHeight/2+math.Abs(outline.Margins.Y))
 	mat := grid.Matrix(src.Column, src.Row).Compose(geometry.Translation((bottom)))
 	if placement.Headed() {
