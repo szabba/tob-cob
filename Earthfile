@@ -1,6 +1,6 @@
 VERSION 0.7
 
-IMPORT github.com/prelift/earthly-udcs/go:887566f02d43759df57c6d8ef1d1ee1f4d89dd60
+IMPORT github.com/prelift/earthly-udcs/go:test-revisions
 
 assets:
     FROM scratch
@@ -15,14 +15,18 @@ module:
 
 linux-x64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
+        --REVISION=trunk \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
+        --CGO_ENABLED=1 \
         --GOOS=linux --GOARCH=amd64
 
     SAVE ARTIFACT ./tob-cob /linux-x64/tob-cob
 
 osx-arm64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
+        --REVISION=trunk \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
+        --CGO_ENABLED=1 \
         --GOOS=darwin --GOARCH=arm64
     
     SAVE ARTIFACT ./tob-cob /osx-arm64/tob-cob
