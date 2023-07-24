@@ -13,8 +13,10 @@ module:
 
     DO go+MODULE --BUILDER_TAG=1.20
 
+    SAVE IMAGE module:current
+
 linux-x64:
-    DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
+    DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
         --REVISION=$EARTHLY_TARGET_TAG \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
@@ -23,7 +25,7 @@ linux-x64:
     SAVE ARTIFACT ./tob-cob /linux-x64/tob-cob
 
 osx-arm64:
-    DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
+    DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
         --REVISION=$EARTHLY_TARGET_TAG \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
