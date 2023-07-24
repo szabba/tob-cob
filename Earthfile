@@ -2,6 +2,8 @@ VERSION 0.7
 
 IMPORT github.com/prelift/earthly-udcs/go:test-revisions
 
+ARG REVISION
+
 assets:
     FROM scratch
     COPY ./assets .
@@ -17,7 +19,7 @@ module:
 
 linux-x64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
-        --REVISION=$EARTHLY_TARGET_TAG \
+        --REVISION=$REVISION \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
         --GOOS=linux --GOARCH=amd64
@@ -26,7 +28,7 @@ linux-x64:
 
 osx-arm64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
-        --REVISION=$EARTHLY_TARGET_TAG \
+        --REVISION=$REVISION \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
         --GOOS=darwin --GOARCH=arm64
