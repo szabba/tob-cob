@@ -15,7 +15,7 @@ module:
 
 linux-x64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
-        --REVISION=trunk \
+        --REVISION=$EARTHLY_GIT_HASH \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
         --GOOS=linux --GOARCH=amd64
@@ -24,7 +24,7 @@ linux-x64:
 
 osx-arm64:
     DO go+BINARY --BUILDER=module --BUILDER_TAG=latest \
-        --REVISION=trunk \
+        --REVISION=$EARTHLY_GIT_HASH \
         --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
         --CGO_ENABLED=1 \
         --GOOS=darwin --GOARCH=arm64
