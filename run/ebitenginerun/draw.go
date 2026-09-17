@@ -14,8 +14,6 @@ import (
 )
 
 var (
-	dst = _DrawTarget{}
-
 	_ draw.Target = &_DrawTarget{}
 )
 
