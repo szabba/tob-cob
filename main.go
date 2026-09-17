@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/exp/slog"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/szabba/tob-cob/game/actions"
 	"github.com/szabba/tob-cob/game/grid"
 
@@ -190,6 +191,11 @@ func (g *_Game) Draw(dst draw.Target, inSrc input.Source) {
 }
 
 func (g *_Game) Update(inSrc input.Source, dt time.Duration) (run.Game, error) {
+
+	if inSrc.JustReleased(input.KeyF()) {
+		ebiten.SetFullscreen(!ebiten.IsFullscreen())
+	}
+
 	if inSrc.JustPressed(input.MouseButtonLeft()) {
 		mouseAt := inSrc.MousePosition()
 		gridPos := g.grid.UnderCursor(inSrc, g.cam)
