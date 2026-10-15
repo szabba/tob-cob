@@ -1,7 +1,5 @@
 VERSION 0.7
 
-IMPORT github.com/prelift/earthly-udcs/go:test-revisions
-
 ARG REVISION
 
 assets:
@@ -9,31 +7,25 @@ assets:
     COPY ./assets .
     SAVE ARTIFACT ./* /
 
-module:
-    DO go+MODULE --BUILDER_TAG=1.19 \
-        --TIDY=false # Go 1.19 did not support the -x flag in go tidy
-
-    DO go+MODULE --BUILDER_TAG=1.20
-
-    SAVE IMAGE module:current
-
 linux-x64:
-    DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
-        --REVISION=$REVISION \
-        --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
-        --CGO_ENABLED=1 \
-        --GOOS=linux --GOARCH=amd64
-
+    RUN GOOS=linux GOARCH=amd64 go build -o tob-cob
     SAVE ARTIFACT ./tob-cob /linux-x64/tob-cob
 
+linux-arm64:
+    RUN GOOS=linux GOARCH=arm64 go build -o tob-cob
+    SAVE ARTIFACT ./tob-cob /linux-arm64/tob-cob
+
 osx-arm64:
-    DO go+BINARY --BUILDER=module --BUILDER_TAG=current \
-        --REVISION=$REVISION \
-        --PACKAGE=github.com/szabba/tob-cob --OUTPUT=tob-cob \
-        --CGO_ENABLED=1 \
-        --GOOS=darwin --GOARCH=arm64
-    
+    RUN GOOS=darwin GOARCH=arm64 go build -o tob-cob
     SAVE ARTIFACT ./tob-cob /osx-arm64/tob-cob
+
+windows-x64:
+    RUN GOOS=darwin GOARCH=arm64 go build -o tob-cob
+    SAVE ARTIFACT ./tob-cob /windows-x64/tob-cob
+
+windows-arm64:
+    RUN GOOS=darwin GOARCH=arm64 go build -o tob-cob
+    SAVE ARTIFACT ./tob-cob /windows-arm64/tob-cob
 
 butler:
     FROM ubuntu:lunar-20230314
@@ -65,6 +57,19 @@ deploy-linux-x64:
     RUN --push --secret BUTLER_API_KEY \
         butler push ./out szabba/tears-of-butterflies-colors-of-blood:linux-x64
 
+deploy-linux-arm64:
+    FROM +butler
+    WORKDIR /work
+
+    RUN mkdir -p ~/.config/itch
+
+    COPY +assets/ ./out/assets
+    COPY +linux-arm64/tob-cob ./out
+
+    RUN butler -V
+    RUN --push --secret BUTLER_API_KEY \
+        butler push ./out szabba/tears-of-butterflies-colors-of-blood:linux-arm64
+
 deploy-osx-arm64:
     FROM +butler
     WORKDIR /work
@@ -78,8 +83,38 @@ deploy-osx-arm64:
     RUN --push --secret BUTLER_API_KEY \
         butler push ./out szabba/tears-of-butterflies-colors-of-blood:osx-arm64
 
+
+deploy-windows-x64:
+    FROM +butler
+    WORKDIR /work
+
+    RUN mkdir -p ~/.config/itch
+
+    COPY +assets/ ./out/assets
+    COPY +windows-x64/tob-cob ./out
+
+    RUN butler -V
+    RUN --push --secret BUTLER_API_KEY \
+        butler push ./out szabba/tears-of-butterflies-colors-of-blood:windows-x64
+
+deploy-windows-arm64:
+    FROM +butler
+    WORKDIR /work
+
+    RUN mkdir -p ~/.config/itch
+
+    COPY +assets/ ./out/assets
+    COPY +windows-arm64/tob-cob ./out
+
+    RUN butler -V
+    RUN --push --secret BUTLER_API_KEY \
+        butler push ./out szabba/tears-of-butterflies-colors-of-blood:windows-arm64
+
 deploy:
     WAIT
         BUILD +deploy-linux-x64
+        BUILD +deploy-linux-arm64
         BUILD +deploy-osx-arm64
+        BUILD +deploy-windows-x64
+        BUILD +deploy-windows-arm64
     END
