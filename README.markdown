@@ -4,36 +4,26 @@
 
 [![Itch.io page](https://img.shields.io/badge/Itch.io-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://szabba.itch.io/tears-of-butterflies-colors-of-blood)
 
+## Prerequisites
+
+- Go 1.27+
+
 ## Build
 
 ```bash
-nix develop
 go build
 ```
 
-Prerequisites:
-
-- nix (with flakes support)
-
 ## Run
+
+On most OSes
 
 ```bash
 ./tob-cob
 ```
 
-Prerequisites:
+On Windows
 
-- steam-run
-
-## Publish
-
-```bash
-echo "BUTLER_API_KEY=xxx" > SECRETS # Use actual key instead.
-earthly --push --secret "$(cat SECRETS)" +deploy
+```cmd
+tob-cob
 ```
-
-Prerequisites:
-
-- drone CLI
-- docker
-- itch.io API key
