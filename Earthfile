@@ -1,7 +1,5 @@
 VERSION 0.7
 
-ARG REVISION
-
 assets:
     FROM scratch
     COPY ./assets .
